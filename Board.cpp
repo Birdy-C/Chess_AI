@@ -122,6 +122,7 @@ _Pos_ ChessBoard::Trans_Bit64toPos(const _Bit64_ &bit)
 		p |= 32, bit_temp = bit >> 32;
 	else
 		bit_temp = bit & 0xFFFFFFFF;*/
+
 	if (bit_temp & 0xFFFF0000)
 		p |= 16, bit_temp >>= 16;
 	if (bit_temp & 0x0000FF00)

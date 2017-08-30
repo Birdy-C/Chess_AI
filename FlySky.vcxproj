@@ -83,6 +83,7 @@
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Check.cpp" />
     <ClCompile Include="Draw.cpp" />
+    <ClCompile Include="evaluation.cpp" />
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="Expand.cpp" />
     <ClCompile Include="Init.cpp" />

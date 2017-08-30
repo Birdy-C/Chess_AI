@@ -32,6 +32,7 @@ void MyApp::InitApp()
 	MyGUI.Reverse_Board = false;
 	MyGUI.LoadMedia();
 	MoveTable_Init();
+	eval_Init();//ÆÀ¹Àº¯Êý³õÊ¼»¯
 	InitMatch();
 }
 

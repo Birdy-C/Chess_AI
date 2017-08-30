@@ -34,6 +34,8 @@ void MyApp::startgame(SDL_Event* pevent)
 		MyGUI.reverseBoard();
 	if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_n)
 		InitMatch();
+	if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_e)
+		Board.evaluation();
 	if (pevent->type == SDL_MOUSEBUTTONDOWN || pevent->type == SDL_MOUSEMOTION)
 		handleMouseEvent(pevent);
 }

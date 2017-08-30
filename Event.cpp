@@ -59,13 +59,13 @@ bool MyApp::MoveChess(const _Coordinate_ &orig_x, const _Coordinate_ &orig_y, co
 			}
 			Board.Castling[side] = 0;
 		}
-			else if (chess_R == chesstype)
-			{
-				if ((Board.Castling[side] & LONG_CASTLING) && 0 == orig_y)
-					Board.Castling[side] &= ~LONG_CASTLING;
-				else if ((Board.Castling[side] & SHORT_CASTLING) && 7 == orig_y)
-					Board.Castling[side] &= ~SHORT_CASTLING;
-			}
+		else if (chess_R == chesstype)
+		{
+			if ((Board.Castling[side] & LONG_CASTLING) && 0 == orig_y)
+				Board.Castling[side] &= ~LONG_CASTLING;
+			else if ((Board.Castling[side] & SHORT_CASTLING) && 7 == orig_y)
+				Board.Castling[side] &= ~SHORT_CASTLING;
+		}
 	}	
 
 	//以下为吃子响应，即落之后的点的desttype不为空时

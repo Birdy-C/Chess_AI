@@ -1,2 +1,5 @@
-﻿  FlySky.vcxproj -> E:\学习资料\SRTP\FlySky - ver 1.0\Debug\FlySky.exe
-  FlySky.vcxproj -> E:\学习资料\SRTP\FlySky - ver 1.0\Debug\FlySky.pdb (Full PDB)
+﻿  evaluation.cpp
+evaluation.cpp(114): warning C4244: “=”: 从“_Bit64_”转换到“_ChessPattern_”，可能丢失数据
+evaluation.cpp(115): warning C4244: “=”: 从“_Bit64_”转换到“_ChessPattern_”，可能丢失数据
+  FlySky.vcxproj -> E:\国象AI\SRTP\FlySky - ver 1.0\Debug\FlySky.exe
+  FlySky.vcxproj -> E:\国象AI\SRTP\FlySky - ver 1.0\Debug\FlySky.pdb (Full PDB)

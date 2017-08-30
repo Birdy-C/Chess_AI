@@ -45,6 +45,9 @@
     <ClCompile Include="Expand.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="evaluation.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Chess.h">

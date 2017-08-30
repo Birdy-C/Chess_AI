@@ -77,6 +77,24 @@ public:
 	unsigned short DeltaCheck(const bool &side, _Pos_ check_pos[2], enum check_type checktype[2]);
 	void Search_RidCheck(const bool &side, const _Pos_ &check_pos, const enum check_type &LChecktype, vector<Movement> &result);
 	void Search_RidDoubleCheck(const bool &side, vector<Movement> &result);
+
+
+
+	//下为评估函数部分
+	int init_attackArea(_ChessPattern_ * attackAreaWhite, _ChessPattern_ * attackAreaBlack);
+	int Lsb64(_Bit64_ Arg);
+	int countChess(_Bit64_ board, bool flag);
+	//int countChess(_ChessPattern_ board, bool flag);
+	//int init_attackArea(int * attackAreaWhite, int * attackAreaBlack);
+	int evaluation();
+	//int value_chess();
+	int value_chess1();
+	int value_chess2();
+	int value_chess3();
+	int value_space(_ChessPattern_ attackAreaWhiteAll, _ChessPattern_ attackAreaBlackAll);
+	//int value_space();
+	int value_flexibility();
+	int value_develop();
 };
 
 class LTexture
@@ -174,6 +192,8 @@ private:
 	void Mouse_ChessMotivation(int MouseX, int MouseY);
 	void Mouse_Promotion(int MouseX, int MouseY, const SDL_Event* e);
 
+	////////////////////////////////////////////////////Evaluation Function
+	void eval_Init();
 public:
 	ChessBoard Board;
 
