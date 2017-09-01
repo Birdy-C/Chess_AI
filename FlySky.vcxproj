@@ -93,6 +93,7 @@
     <ClCompile Include="Movement.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="AboutMove.h" />
     <ClInclude Include="Chess.h" />
     <ClInclude Include="Macro.h" />
   </ItemGroup>

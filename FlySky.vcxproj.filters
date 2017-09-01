@@ -56,5 +56,8 @@
     <ClInclude Include="Macro.h">
       <Filter>源文件</Filter>
     </ClInclude>
+    <ClInclude Include="AboutMove.h">
+      <Filter>源文件</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

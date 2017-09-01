@@ -1,14 +1,15 @@
 #include"Chess.h"
+#include"AboutMove.h"
 
 extern _Bit64_ mask[64];
 
 _Bit64_ move_Pawn[2][64];
 _Bit64_ move_Knight[64];
 _Bit64_ move_King[64];
-static _Bit64_ rank_attacks[64][256] = { 0 };	//行
-static _Bit64_ file_attacks[64][256] = { 0 };	//列
-static _Bit64_ diag_A8H1_attacks[64][256] = { 0 };
-static _Bit64_ diag_H8A1_attacks[64][256] = { 0 };
+ _Bit64_ rank_attacks[64][256] = { 0 };	//行
+ _Bit64_ file_attacks[64][256] = { 0 };	//列
+ _Bit64_ diag_A8H1_attacks[64][256] = { 0 };
+ _Bit64_ diag_H8A1_attacks[64][256] = { 0 };
 
 static const short getline_shift[64] = { 0, 0, 0, 0, 0, 0, 0, 0, 8, 8, 8, 8, 8, 8, 8, 8, 16, 16, 16, 16, 16, 16, 16, 16, 24, 24, 24, 24, 24, 24, 24, 24, 32, 32, 32, 32, 32, 32, 32, 32, 40, 40, 40, 40, 40, 40, 40, 40, 48, 48, 48, 48, 48, 48, 48, 48, 56, 56, 56, 56, 56, 56, 56, 56 };
 static const short getline_shift_trans[64] = { 0, 8, 16, 24, 32, 40, 48, 56, 0, 8, 16, 24, 32, 40, 48, 56, 0, 8, 16, 24, 32, 40, 48, 56, 0, 8, 16, 24, 32, 40, 48, 56, 0, 8, 16, 24, 32, 40, 48, 56, 0, 8, 16, 24, 32, 40, 48, 56, 0, 8, 16, 24, 32, 40, 48, 56, 0, 8, 16, 24, 32, 40, 48, 56 };

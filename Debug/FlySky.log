@@ -1,5 +1,7 @@
 ﻿  evaluation.cpp
-evaluation.cpp(114): warning C4244: “=”: 从“_Bit64_”转换到“_ChessPattern_”，可能丢失数据
-evaluation.cpp(115): warning C4244: “=”: 从“_Bit64_”转换到“_ChessPattern_”，可能丢失数据
+evaluation.cpp(465): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
+evaluation.cpp(479): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
+evaluation.cpp(509): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
+evaluation.cpp(526): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
   FlySky.vcxproj -> E:\国象AI\SRTP\FlySky - ver 1.0\Debug\FlySky.exe
   FlySky.vcxproj -> E:\国象AI\SRTP\FlySky - ver 1.0\Debug\FlySky.pdb (Full PDB)

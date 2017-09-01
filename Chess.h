@@ -73,6 +73,7 @@ public:
 	bool DeltaMoveLegality(const _Pos_ &orig, const _Pos_ &dest, const _ChessPattern_ &chesstype, const _ChessType_ &desttype, const bool &side);
 
 	_ChessPattern_ DeltaChess(const _Coordinate_ &x, const _Coordinate_ &y);
+	_ChessType_ DeltaChess(const _Bit64_ p);
 	bool DeltaAttack(const bool &side, const _Pos_ &pos);
 	unsigned short DeltaCheck(const bool &side, _Pos_ check_pos[2], enum check_type checktype[2]);
 	void Search_RidCheck(const bool &side, const _Pos_ &check_pos, const enum check_type &LChecktype, vector<Movement> &result);
@@ -81,20 +82,17 @@ public:
 
 
 	//下为评估函数部分
-	int init_attackArea(_ChessPattern_ * attackAreaWhite, _ChessPattern_ * attackAreaBlack);
 	int Lsb64(_Bit64_ Arg);
 	int countChess(_Bit64_ board, bool flag);
-	//int countChess(_ChessPattern_ board, bool flag);
-	//int init_attackArea(int * attackAreaWhite, int * attackAreaBlack);
+	int init_attackArea(_Bit64_ * attackAreaWhite, _Bit64_ * attackAreaBlack);
 	int evaluation();
-	//int value_chess();
 	int value_chess1();
-	int value_chess2();
+	//int value_chess2();
+	int value_chess2(_Bit64_ * attackAreaWhite, _Bit64_ * attackAreaBlack);
 	int value_chess3();
-	int value_space(_ChessPattern_ attackAreaWhiteAll, _ChessPattern_ attackAreaBlackAll);
-	//int value_space();
-	int value_flexibility();
-	int value_develop();
+	int value_space(_Bit64_ attackAreaWhiteAll, _Bit64_ attackAreaBlackAll);
+	int value_flexibility(_Bit64_ * attackAreaWhiteAll, _Bit64_ * attackAreaBlackAll);
+	int value_develop(_Bit64_ * attackAreaWhite, _Bit64_ * attackAreaBlack);
 };
 
 class LTexture

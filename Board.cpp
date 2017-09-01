@@ -36,6 +36,7 @@ void ChessBoard::Reset()
 	Check = false;
 }
 
+//返回是什么类型的棋子
 _ChessType_ ChessBoard::DeltaChess(const _Coordinate_ &x, const _Coordinate_ &y)
 {
 	_Bit64_ p = (_Bit64_)1 << ((x << 3) + y);
@@ -56,6 +57,27 @@ _ChessType_ ChessBoard::DeltaChess(const _Coordinate_ &x, const _Coordinate_ &y)
 	}
 	return NONE;
 }
+
+_ChessType_ ChessBoard::DeltaChess(const _Bit64_ p)
+{
+	
+	if (!(p & White_All.GetData() || p & Black_All.GetData()))
+		return NONE;
+	if (p & White_All.GetData())
+	{
+		for (int i = 0; i < 6; i++)
+			if (p & White[i].GetData())
+				return i;
+	}
+	else
+	{
+		for (int i = 0; i < 6; i++)
+			if (p & Black[i].GetData())
+				return i | BLACK_CHESS_BIT;
+	}
+	return NONE;
+}
+
 
 void ChessBoard::Move(const _Pos_ &orig, const _Pos_ &dest, const _ChessPattern_ &chesstype, const bool &side)
 {
