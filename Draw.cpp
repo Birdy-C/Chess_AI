@@ -1,4 +1,4 @@
-#include"Chess.h"
+#include "Chess.h"
 
 extern MyApp theApp;
 
@@ -14,60 +14,42 @@ void Renderer::RenderApp()
 
 void Renderer::DrawBackground()
 {
+	BitBoard chess;
+	unsigned short x, y;
+	_Pos_ p;
+
 	theApp.MyGUI.BoardBackground[theApp.MyGUI.Reverse_Board].renderTexture(0, 0);
 	if (~(theApp.MyGUI.selectedX & theApp.MyGUI.selectedY))
 	{
 		if (theApp.MyGUI.Reverse_Board)
-			theApp.MyGUI.SelectedBackground.renderTexture(36 + 92 * theApp.MyGUI.selectedY, 33 + 92 * (7 - theApp.MyGUI.selectedX));
+			theApp.MyGUI.SelectedBackground.renderTexture(36 + 92 * (7 - theApp.MyGUI.selectedY), 33 + 92 * (7 - theApp.MyGUI.selectedX));
 		else
 			theApp.MyGUI.SelectedBackground.renderTexture(36 + 92 * theApp.MyGUI.selectedY, 33 + 92 * theApp.MyGUI.selectedX);
 	}
-	//debug
-	unsigned long long chess, p;
-	unsigned short x, y;
 
-	chess = theApp.Board.Debug.GetData();
+	//highlight
+	chess = theApp.HighLight;
 	while (chess)
 	{
-		x = y = 0;
-		p = chess & (~chess + 1);
-		chess &= ~p;
-		while (p >> 8)
-			p >>= 8, x++;
-		while (p >>= 1)
-			y++;
+		p = pop_lsb(chess);
+		x = rank_of(p);
+		y = file_of(p);
 		if (theApp.MyGUI.Reverse_Board)
-			x = 7 - x;
+			x = 7 - x, y = 7 - y;
 		theApp.MyGUI.SelectedBackground.renderTexture(36 + 92 * y, 33 + 92 * x);
 	}
 	//check
-	if (theApp.Board.Check)
-	{
-		if (WHITE_SIDE == theApp.side)
-			p = theApp.Board.White[chess_K].GetData();
-		else
-			p = theApp.Board.Black[chess_K].GetData();
-
-		x = (theApp.Board.Trans_Bit64toPos(p) >> 3);
-		y = (theApp.Board.Trans_Bit64toPos(p) & 7);
+	chess = theApp.PromotionRank == NONE ? theApp.Board.His_attackers_to(theApp.Board.posK(theApp.side)) : 0;
+	if (chess)
+		chess |= theApp.Board.get_bb(theApp.side, chess_K);
+	while (chess)
+	{		
+		p = pop_lsb(chess);
+		x = rank_of(p);
+		y = file_of(p);
 		if (theApp.MyGUI.Reverse_Board)
-			x = 7 - x;
+			x = 7 - x, y = 7 - y;
 		theApp.MyGUI.CheckBackground.renderTexture(35 + 92 * y, 32 + 92 * x);
-
-		x = theApp.Checker_pos[0] >> 3;
-		y = theApp.Checker_pos[0] & 7;
-		if (theApp.MyGUI.Reverse_Board)
-			x = 7 - x;
-		theApp.MyGUI.CheckBackground.renderTexture(35 + 92 * y, 32 + 92 * x);
-
-		if (theApp.Checker_pos[1] != NONE)
-		{
-			x = theApp.Checker_pos[1] >> 3;
-			y = theApp.Checker_pos[1] & 7;
-			if (theApp.MyGUI.Reverse_Board)
-				x = 7 - x;
-			theApp.MyGUI.CheckBackground.renderTexture(35 + 92 * y, 32 + 92 * x);
-		}
 	}
 }
 
@@ -76,9 +58,9 @@ void Renderer::DrawChessmen()
 	unsigned long long chess, p;
 	unsigned short x, y;
 
-	for (int i = 0; i < 6; i++)
+	for (_ChessPattern_ i = chess_P; i < _PATTERN_COUNT_; i++)
 	{
-		chess = theApp.Board.White[i].GetData();
+		chess = theApp.Board.get_bb(WHITE_SIDE, i);
 		while (chess)
 		{
 			x = y = 0;
@@ -89,14 +71,14 @@ void Renderer::DrawChessmen()
 			while (p >>= 1)
 				y++;
 			if (theApp.MyGUI.Reverse_Board)
-				x = 7 - x;
+				x = 7 - x, y = 7 - y;
 			theApp.MyGUI.Texture_White[i].renderTexture(35 + 92 * y, 30 + 92 * x);
 		}
 	}
 
 	for (int i = 0; i < 6; i++)
 	{
-		chess = theApp.Board.Black[i].GetData();
+		chess = theApp.Board.get_bb(BLACK_SIDE, i);
 		while (chess)
 		{
 			x = y = 0;
@@ -107,7 +89,7 @@ void Renderer::DrawChessmen()
 			while (p >>= 1)
 				y++;
 			if (theApp.MyGUI.Reverse_Board)
-				x = 7 - x;
+				x = 7 - x, y = 7 - y;
 			theApp.MyGUI.Texture_Black[i].renderTexture(35 + 92 * y, 30 + 92 * x);
 		}
 	}

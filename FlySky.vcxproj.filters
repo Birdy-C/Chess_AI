@@ -15,49 +15,97 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Main.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="LTextrue.cpp">
+    <ClCompile Include="_DEBUG_.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Board.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="Check.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
     <ClCompile Include="Draw.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Evaluation.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Event.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Mouse.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Movement.cpp">
+    <ClCompile Include="Expand.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Init.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Check.cpp">
+    <ClCompile Include="LTextrue.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Expand.cpp">
+    <ClCompile Include="Main.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="evaluation.cpp">
+    <ClCompile Include="Mouse.cpp">
       <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Zobrist.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="SearchTree.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BitBoard.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Movement.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="MoveTable.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="material.cpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Imbalance.cpp">
+      <Filter>头文件</Filter>
+    </ClCompile>
+    <ClCompile Include="Pawn.cpp">
+      <Filter>头文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Chess.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Macro.h">
-      <Filter>源文件</Filter>
+    <ClInclude Include="BitBoard.h">
+      <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="AboutMove.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Board.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Chess.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Hash.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Macro.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Movement.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Search.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Evaluation.h">
       <Filter>源文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Pawn.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

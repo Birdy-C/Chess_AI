@@ -11,8 +11,10 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{0024E875-350E-4260-94DA-3114386E097B}</ProjectGuid>
+    <ProjectGuid>{869F6B5B-1F8D-4CB2-B292-614E626AFCB0}</ProjectGuid>
     <RootNamespace>FlySky</RootNamespace>
+    <ProjectName>
+    </ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -20,7 +22,6 @@
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v140</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
-    <UseOfMfc>false</UseOfMfc>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -40,8 +41,8 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2-2.0.4\include;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_ttf-2.0.14\include;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_mixer-2.0.1\include;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_image-2.0.1\include;C:\vs_dev_lib\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
-    <LibraryPath>D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_mixer-2.0.1\lib\x64;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2-2.0.4\lib\x64;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_ttf-2.0.14\lib\x64;C:\vs_dev_lib\SDL2-2.0.4\lib\x86;$(LibraryPath)</LibraryPath>
+    <IncludePath>C:\vs_dev_lib\SDL2-2.0.4\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\vs_dev_lib\SDL2-2.0.4\lib\x86;$(LibraryPath)</LibraryPath>
     <EnableManagedIncrementalBuild>true</EnableManagedIncrementalBuild>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -49,29 +50,27 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
-      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <FunctionLevelLinking>false</FunctionLevelLinking>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_image-2.0.1\include;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_mixer-2.0.1\include;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_ttf-2.0.14\include;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2-2.0.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>G:\VC-SDL2\SDL2_image-2.0.1\include;G:\VC-SDL2\SDL2_mixer-2.0.1\include;G:\VC-SDL2\SDL2_ttf-2.0.14\include;G:\VC-SDL2\SDL2-2.0.4\include;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_mixer.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
-      <AdditionalLibraryDirectories>D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_image-2.0.1\lib\x86;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2-2.0.4\lib\x86;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_ttf-2.0.14\lib\x86;D:\Program Files %28x86%29\Microsoft Visual Studio 14.0\VC\VC-SDL2\SDL2_mixer-2.0.1\lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>G:\VC-SDL2\SDL2_mixer-2.0.1\lib\x86;G:\VC-SDL2\SDL2-2.0.4\lib\x86;G:\VC-SDL2\SDL2_ttf-2.0.14\lib\x86;G:\VC-SDL2\SDL2_image-2.0.1\lib\x86;G:\VC-SDL2\x86DLL;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
-      <Optimization>Disabled</Optimization>
-      <FunctionLevelLinking>false</FunctionLevelLinking>
-      <IntrinsicFunctions>false</IntrinsicFunctions>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -80,22 +79,38 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="BitBoard.cpp" />
     <ClCompile Include="Board.cpp" />
     <ClCompile Include="Check.cpp" />
     <ClCompile Include="Draw.cpp" />
-    <ClCompile Include="evaluation.cpp" />
+    <ClCompile Include="Evaluation.cpp" />
     <ClCompile Include="Event.cpp" />
     <ClCompile Include="Expand.cpp" />
+    <ClCompile Include="Imbalance.cpp" />
     <ClCompile Include="Init.cpp" />
     <ClCompile Include="LTextrue.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="material.cpp" />
     <ClCompile Include="Mouse.cpp" />
     <ClCompile Include="Movement.cpp" />
+    <ClCompile Include="MoveTable.cpp" />
+    <ClCompile Include="Pawn.cpp" />
+    <ClCompile Include="SearchTree.cpp" />
+    <ClCompile Include="Zobrist.cpp" />
+    <ClCompile Include="_DEBUG_.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="AboutMove.h" />
+    <ClInclude Include="BitBoard.h" />
+    <ClInclude Include="Board.h" />
     <ClInclude Include="Chess.h" />
+    <ClInclude Include="Evaluation.h" />
+    <ClInclude Include="GUI.h" />
+    <ClInclude Include="Hash.h" />
     <ClInclude Include="Macro.h" />
+    <ClInclude Include="Movement.h" />
+    <ClInclude Include="Pawn.h" />
+    <ClInclude Include="Search.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

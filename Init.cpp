@@ -1,20 +1,34 @@
-#include"Chess.h"
-
-extern _Bit64_ mask[64];
+#include "Chess.h"
 
 void MyApp::InitApp()
 {
-	MyGUI.SCREEN_WIDTH = 800;
-	MyGUI.SCREEN_HEIGHT = 800;
+	MyGUI.Init();
+	MoveTable_Init();
+	Zobrist_Init();
+	InitMatch();
+	Board.init_Eval();
+}
 
-	_Bit64_ b = 1;
-	for (int c = 0; c < 64; c++)
-		mask[c] = b << c;
+void MyApp::MoveTable_Init()
+{
+	Board.Init_BasicTable();
 
-	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO)<0)
+	Board.Init_MoveTable_KNP();
+	Board.Init_MoveTableStraight();
+	Board.Init_MoveTableDiag();
+
+	Board.Init_BetweenTable();
+}
+
+void GUI::Init()
+{
+	SCREEN_WIDTH = 800;
+	SCREEN_HEIGHT = 800;
+
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO) < 0)
 		Error("Main.cpp", "void MyApp::Init()", "SDL¼ÓÔØÊ§°Ü");
 
-	gWindow = SDL_CreateWindow("FlySky", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, MyGUI.SCREEN_WIDTH, MyGUI.SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+	gWindow = SDL_CreateWindow("FlySky", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
 	if (gWindow == NULL)
 		Error("Main.cpp", "void MyApp::Init()", "´°¿Ú´´½¨Ê§°Ü");
 
@@ -29,11 +43,8 @@ void MyApp::InitApp()
 	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 2048) < 0)
 		Error("Main.cpp", "void MyApp::Init()", "SDL¼ÓÔØÊ§°Ü");
 
-	MyGUI.Reverse_Board = false;
-	MyGUI.LoadMedia();
-	MoveTable_Init();
-	eval_Init();//ÆÀ¹Àº¯Êý³õÊ¼»¯
-	InitMatch();
+	Reverse_Board = false;
+	LoadMedia();
 }
 
 void GUI::LoadMedia()
@@ -61,4 +72,5 @@ void GUI::LoadMedia()
 	Eat_sound = Mix_LoadWAV("./Media/Eat_sound.wav");
 	Check_sound = Mix_LoadWAV("./Media/Check_sound.wav");
 	Mate_sound = Mix_LoadWAV("./Media/Mate_sound.wav");
+	Illegal_sound = Mix_LoadWAV("./Media/Illegal_sound.wav");
 }

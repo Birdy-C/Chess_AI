@@ -1,7 +1,6 @@
 #include"Chess.h"
 
 extern MyApp theApp;
-extern _Bit64_ mask[64];
 
 void MyApp::handleMouseEvent(const SDL_Event* e)
 {
@@ -28,70 +27,50 @@ void MyApp::Mouse_ChessMotivation(int MouseX, int MouseY)
 		if ((x * 92 + 5 < MouseY) && (x * 92 + 87 > MouseY) && (y * 92 + 5 < MouseX) && (y * 92 + 87 > MouseX))
 		{
 			if (MyGUI.Reverse_Board)
-				x = 7 - x;
+				x = 7 - x, y = 7 - y;
 
-			if (MyGUI.selectedX == x && MyGUI.selectedY == y)
+			_Pos_ old_pos = (MyGUI.selectedX << 3) | MyGUI.selectedY, new_pos = (x << 3) | y;
+
+			if (old_pos == new_pos)
 			{
 				MyGUI.selectedX = MyGUI.selectedY = NONE;
-				Board.Debug.Board = 0;
+				Clear(HighLight);
 			}
-			else if (!(~(MyGUI.selectedX & MyGUI.selectedY)) && (Board.DeltaChess(x, y) >> 3) == side)
+			else if (SQ_COUNT <= old_pos)
 			{
-				MyGUI.selectedX = x, MyGUI.selectedY = y;
-				//debug
-				if (Board.DeltaChess(x, y) != NONE)
-					Board.Debug.Board = Board.movement_step(Board.DeltaChess(MyGUI.selectedX, MyGUI.selectedY), (MyGUI.selectedX << 3) + MyGUI.selectedY);
+				if (CHESS_NONE != Board.chess_at(new_pos) && side_of(Board.chess_at(new_pos)) == side)
+				{
+					MyGUI.selectedX = x, MyGUI.selectedY = y;
+					HighLight = Board.movement_step(new_pos, true);			//debug.......................
+					//HighLight.Init(Board.AttackRange[(x << 3) | y]);
+				}
 			}
 			else
 			{
-				_ChessPattern_ chesstype = Board.DeltaChess(MyGUI.selectedX, MyGUI.selectedY);
-				_ChessPattern_ desttype = Board.DeltaChess(x, y);
+				assert(old_pos < 64 && new_pos < 64);
+				_ChessType_ new_tp = Board.chess_at(new_pos);
 
-				if (chesstype == NONE && desttype >> 3 == side)
+				if (mask(new_pos) & Board.movement_step(old_pos))
+				{
+					if (mask(new_pos) & HighLight)						//真正下棋的分支
+						MoveChess(MyGUI.selectedX, MyGUI.selectedY, x, y);
+					else
+						Mix_PlayChannel(-1, theApp.MyGUI.Illegal_sound, 0);
+
+					MyGUI.selectedX = MyGUI.selectedY = NONE;
+					Clear(HighLight);
+				}
+				
+				else if (CHESS_NONE != new_tp && side_of(new_tp) == side)
 				{
 					MyGUI.selectedX = x, MyGUI.selectedY = y;
-					//debug
-					if (Board.DeltaChess(x, y) != NONE)
-						Board.Debug.Board = Board.movement_step(Board.DeltaChess(MyGUI.selectedX, MyGUI.selectedY), (MyGUI.selectedX << 3) + MyGUI.selectedY);
-					else
-						Board.Debug.Board = 0;
-				}
-				else if (side == WHITE_SIDE && !(chesstype & 8) && (desttype & 8) ||
-					side == BLACK_SIDE && chesstype & 8 && (desttype == NONE || !(desttype & 8)))
-				{
-					if (mask[(x << 3) | y] & Board.movement_step(chesstype, (MyGUI.selectedX << 3) | MyGUI.selectedY))
-					{																					//真正下棋的分支
-						bool success = MoveChess(MyGUI.selectedX, MyGUI.selectedY, x, y, chesstype & 7, desttype, side);
-
-						if (success)
-						{
-							if (side == WHITE_SIDE && chesstype == 0 && x == 0 || side == BLACK_SIDE && chesstype == 8 && x == 7)
-								PromotionRank = y;
-							else
-								side = !side;
-						}
-					}
-					MyGUI.selectedX = MyGUI.selectedY = NONE;
-					Board.Debug.Board = 0;
-					if (GameOver)
-					{
-						gRenderer.RenderApp();
-						MessageBox(NULL, TEXT("Check-Mate!"), TEXT("Fly sky"), MB_OK);
-					}
+					HighLight = Board.movement_step(new_pos, true);		//debug.......................
+					//HighLight.Init(Board.AttackRange[(x << 3) | y]);
 				}
 				else
 				{
-					//debug
-					if (Board.DeltaChess(x, y) != NONE)
-					{
-						MyGUI.selectedX = x, MyGUI.selectedY = y;
-						Board.Debug.Board = Board.movement_step(Board.DeltaChess(MyGUI.selectedX, MyGUI.selectedY), (MyGUI.selectedX << 3) + MyGUI.selectedY);
-					}
-					else
-					{
-						MyGUI.selectedX = MyGUI.selectedY = NONE;
-						Board.Debug.Board = 0;
-					}						
+					MyGUI.selectedX = MyGUI.selectedY = NONE;
+					Clear(HighLight);
 				}
 			}
 		}
@@ -100,9 +79,6 @@ void MyApp::Mouse_ChessMotivation(int MouseX, int MouseY)
 
 void MyApp::Mouse_Promotion(int MouseX, int MouseY, const SDL_Event* e)
 {
-	_ChessType_ chesstype;
-	_Coordinate_ x;
-
 	if (e->type == SDL_MOUSEMOTION && MouseY >= 395 && MouseY <= 445)
 	{
 		if (MouseX >= 256 && MouseX <= 306)
@@ -114,55 +90,40 @@ void MyApp::Mouse_Promotion(int MouseX, int MouseY, const SDL_Event* e)
 		else if (MouseX >= 493 && MouseX <= 543)
 			MyGUI.selectedPromotion = 3;
 		else
-			MyGUI.selectedPromotion = -1;
+			MyGUI.selectedPromotion = NONE;
 	}
-	if (e->type == SDL_MOUSEBUTTONDOWN && MyGUI.selectedPromotion != -1)
+	if (e->type == SDL_MOUSEBUTTONDOWN && MyGUI.selectedPromotion != NONE)
 	{
-		if (side == WHITE_SIDE)
-		{
-			x = 0;
-			switch (MyGUI.selectedPromotion)
-			{
-			case 0:
-				Board.White[chess_Q].Eaten(PromotionRank); 
-				chesstype = chess_Q; break;
-			case 1:
-				Board.White[chess_R].Eaten(PromotionRank); 
-				chesstype = chess_R; break;
-			case 2:
-				Board.White[chess_B].Eaten(PromotionRank); 
-				chesstype = chess_B; break;
-			case 3:
-				Board.White[chess_N].Eaten(PromotionRank); 
-				chesstype = chess_N; break;
-			}
-			Board.White[chess_P].Eaten(PromotionRank);
-		}
-		else
-		{
-			x = 7;
-			switch (MyGUI.selectedPromotion)
-			{
-			case 0:
-				Board.Black[chess_Q].Eaten(56 | PromotionRank); 
-				chesstype = chess_Q | BLACK_CHESS_BIT; break;
-			case 1:
-				Board.Black[chess_R].Eaten(56 | PromotionRank); 
-				chesstype = chess_R | BLACK_CHESS_BIT; break;
-			case 2:
-				Board.Black[chess_B].Eaten(56 | PromotionRank); 
-				chesstype = chess_B | BLACK_CHESS_BIT; break;
-			case 3:
-				Board.Black[chess_N].Eaten(56 | PromotionRank); 
-				chesstype = chess_N | BLACK_CHESS_BIT; break;
-			}
-			Board.Black[chess_P].Eaten(56 | PromotionRank);
-		}
+		Board.Eaten(PromotionRank | (side * 56));
 
-		PromotionRank = NONE;
-		CheckControl(false);
+		switch (MyGUI.selectedPromotion)
+		{
+		case 0:
+			Board.Place(PromotionRank | (side * 56), (side * BLACK_CHESS_BIT) | chess_Q);
+			Move_record[step_count - 1].SetPromotionPattern(chess_Q);
+			break;
+		case 1:
+			Board.Place(PromotionRank | (side * 56), (side * BLACK_CHESS_BIT) | chess_R);
+			Move_record[step_count - 1].SetPromotionPattern(chess_R);
+			break;
+		case 2:
+			Board.Place(PromotionRank | (side * 56), (side * BLACK_CHESS_BIT) | chess_B);
+			Move_record[step_count - 1].SetPromotionPattern(chess_B); 
+			break;
+		case 3:
+			Board.Place(PromotionRank | (side * 56), (side * BLACK_CHESS_BIT) | chess_N);
+			Move_record[step_count - 1].SetPromotionPattern(chess_N); 
+			break;
+		}
+		
+		Board.Set_atk_area(PromotionRank | (side * 56));		//由于延迟了着步确定，需要在着步确定时更新升变位置AttackRange
 
 		MyGUI.selectedPromotion = NONE;
+		PromotionRank = NONE;
+
 		side = !side;
+		CheckControl(false);
+
+		Board.DEBUG_PRINT_EXPAND(side);
 	}
 }

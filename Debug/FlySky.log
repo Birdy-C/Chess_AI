@@ -1,7 +1,20 @@
-﻿  evaluation.cpp
-evaluation.cpp(465): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
-evaluation.cpp(479): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
-evaluation.cpp(509): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
-evaluation.cpp(526): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
-  FlySky.vcxproj -> E:\国象AI\SRTP\FlySky - ver 1.0\Debug\FlySky.exe
-  FlySky.vcxproj -> E:\国象AI\SRTP\FlySky - ver 1.0\Debug\FlySky.pdb (Full PDB)
+﻿  Pawn.cpp
+Pawn.cpp(109): warning C4244: “参数”: 从“BitBoard”转换到“const _Pos_”，可能丢失数据
+  Pawn.cpp(139): note: 参见对正在编译的函数 模板 实例化“_Score_ ChessBoard::pawn_evaluate<WHITE_SIDE>(void)”的引用
+Pawn.cpp(110): warning C4244: “参数”: 从“BitBoard”转换到“const _Pos_”，可能丢失数据
+Pawn.cpp(110): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
+Pawn.cpp(113): warning C4244: “参数”: 从“BitBoard”转换到“const _Coordinate_”，可能丢失数据
+Pawn.cpp(122): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
+Pawn.cpp(122): warning C4244: “参数”: 从“BitBoard”转换到“const _Pos_”，可能丢失数据
+Pawn.cpp(122): warning C4244: “+=”: 从“_Score_”转换到“_Value_”，可能丢失数据
+Pawn.cpp(125): warning C4244: “-=”: 从“const _Score_”转换到“_Value_”，可能丢失数据
+Pawn.cpp(131): warning C4244: “-=”: 从“const _Score_”转换到“_Value_”，可能丢失数据
+Pawn.cpp(91): warning C4101: “b”: 未引用的局部变量
+Pawn.cpp(92): warning C4101: “lever”: 未引用的局部变量
+Pawn.cpp(93): warning C4101: “backward”: 未引用的局部变量
+Pawn.cpp(91): warning C4101: “stoppers”: 未引用的局部变量
+Pawn.cpp(92): warning C4101: “leverPush”: 未引用的局部变量
+  Evaluation.cpp
+  正在生成代码...
+  FlySky.vcxproj -> E:\Chess_AI\Debug\FlySky.exe
+  FlySky.vcxproj -> E:\Chess_AI\Debug\FlySky.pdb (Full PDB)

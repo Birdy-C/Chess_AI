@@ -1,42 +1,99 @@
-#include"Chess.h"
+#include "Chess.h"
+#include "GUI.h"
+#include <random>
 
 MyApp theApp;
-_Bit64_ mask[64];
+LARGE_INTEGER Tfre, Tstart, Tend;
+double timing = 0;
 
 int main(int agc, char *args[])
 {
 	theApp.InitApp();
 	theApp.RunApp();
+
+	return 0;
+}
+
+unsigned int WINAPI testDBG(LPVOID pt)
+{
+	theApp.MonteCarlo();
+
 	return 0;
 }
 
 void MyApp::RunApp()
 {
-	bool quit = false;
+	bool quit = false, flag = true;
 	SDL_Event event;
+
+	//HANDLE mont = (HANDLE)_beginthreadex(NULL, 0, testDBG, NULL, 0, NULL);
+
+	//MonteCarlo();
+	//system("pause");
+
+	//quit = true;
+
+	//Load_Record("./Media/record.txt");			//从文件中读取棋步记录到Move_record供调试，主程序中按P可根据记录下棋
 
 	while (!quit)
 	{
+		/*
+		if (side == BLACK_SIDE)
+			flag = true;
+		if (side == WHITE_SIDE && flag)
+		{
+			IterativeDeepening(side);
+			flag = false;
+		}*/
 		while (SDL_PollEvent(&event))
 		{
 			if (event.type == SDL_QUIT)
 				quit = TRUE;
-			else
+			else if (event.type == SDL_KEYDOWN && event.key.keysym.sym == SDLK_ESCAPE)
+				quit = true;
+			else if (event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_KEYDOWN || event.type == SDL_MOUSEMOTION)
 				startgame(&event);
 		}
-		gRenderer.RenderApp();
+		MyGUI.gRenderer.RenderApp();
 	}
 }
 
 void MyApp::startgame(SDL_Event* pevent)
 {
+	void FILE_Print(const vector<Movement> &record);
+
 	if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_r)
 		MyGUI.reverseBoard();
-	if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_n)
+	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_n)
 		InitMatch();
-	if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_e)
-		Board.evaluation();
-	if (pevent->type == SDL_MOUSEBUTTONDOWN || pevent->type == SDL_MOUSEMOTION)
+	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_e)
+		Board.evaluation(theApp.side);
+	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_z)
+		for (int ri = 0; ri < 100; ri++)
+			MoveChess(Move_record[step_count]);
+	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_p)
+	{
+		
+		if (side == WHITE_SIDE)
+		{
+			ChessBoard temp = Board;
+			MoveChess(temp.IterativeDeepening(side, step_count));
+		}
+		else
+		{
+			unsigned short branch_count;
+			Movement new_Move[MAX_BRANCH_COUNT];
+			branch_count = Board.strict_expand(side, new_Move);
+			size_t choice = rand32() % branch_count;
+			MoveChess(new_Move[choice]);
+		}
+		/*
+		system("cls");
+		MoveChess(Move_record[step_count]);
+		Board.DEBUG_PRINT_EXPAND(side);
+		printf("STEP %d\n", step_count);*/
+	}
+	else if (pevent->type == SDL_MOUSEBUTTONDOWN || pevent->type == SDL_MOUSEMOTION)
 		handleMouseEvent(pevent);
 }
 

@@ -1,40 +1,34 @@
-#ifndef __GUI_H_
-#define __GUI_H_
+#pragma once
 
-#pragma warning(disable:4996)
+#define CHESSMEN_SIZE			90
 
-typedef unsigned long long _Bit64_;
-typedef unsigned char _Pos_;
-typedef unsigned char _Coordinate_;
+#define NONE					255
+#define INVALID				   -1
 
-typedef unsigned char _ChessPattern_;
-typedef unsigned char _ChessType_;
+#define KNIGHT_POSSIBLE_MOVE	8
+#define KING_POSSIBLE_MOVE		8
 
-enum check_type{ Pawn_Check = 0, Knight_Check, Diag_Check, Straight_Check };
+#define LONG_CASTLING			1
+#define SHORT_CASTLING			2
 
-#define chess_P 0
-#define chess_N 1
-#define chess_B 2
-#define chess_R 3
-#define chess_Q 4
-#define chess_K 5
-#define BLACK_CHESS_BIT 8
+#define MAX_BRANCH_COUNT		128
+#define MAX_DEPTH				24
 
-#define CHESSMEN_SIZE 90
+#define K						*(1024)
+#define M						*(1048576)
 
-#define NONE 255
+#define BASIC_SEARCH_DEPTH		1
+#define SEARCH_DEPTH			8
 
-#define WHITE_SIDE false
-#define BLACK_SIDE true
-#define SEARCH_FAIL false
-#define SEARCH_SUCCESS true
+#define IS_NOT_LINE		0ULL
+#define IS_LINE			0x8100000000000081ULL
+#define LINE_RANK		0x0000000000000001ULL
+#define LINE_FILE		0x0000000000000080ULL
+#define LINE_A8H1		0x0100000000000000ULL
+#define LINE_H8A1		0x8000000000000000ULL
 
-#define KNIGHT_POSSIBLE_MOVE 8
-#define KING_POSSIBLE_MOVE 8
-
-#define LONG_CASTLING  1		//рвн╩
-#define SHORT_CASTLING 2
-
-#define CHECK_ARRAY_SIZE 30
-
-#endif
+typedef unsigned short	_MoveType_;
+typedef unsigned char	_Check_Type_;
+typedef long			_Score_;
+typedef short			_Value_;
+typedef char			_Depth_;

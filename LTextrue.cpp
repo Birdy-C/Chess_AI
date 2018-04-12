@@ -1,4 +1,4 @@
-#include"Chess.h"
+#include "Chess.h"
 
 extern MyApp theApp;
 
@@ -7,7 +7,7 @@ void LTexture::renderTexture(unsigned short x, unsigned short y)
 	SDL_Rect srcRect = { 0, 0, mWidth, mHeight };
 	SDL_Rect destRect = { x, y, mWidth, mHeight };
 
-	theApp.gRenderer.RenderCopy(mTexture, &srcRect, &destRect);
+	theApp.MyGUI.gRenderer.RenderCopy(mTexture, &srcRect, &destRect);
 }
 
 void LTexture::renderTexture(unsigned short x, unsigned short y, unsigned short Width, unsigned short Height)
@@ -15,7 +15,7 @@ void LTexture::renderTexture(unsigned short x, unsigned short y, unsigned short 
 	SDL_Rect srcRect = { 0, 0, mWidth, mHeight };
 	SDL_Rect destRect = { x, y, Width, Height };
 
-	theApp.gRenderer.RenderCopy(mTexture, &srcRect, &destRect);
+	theApp.MyGUI.gRenderer.RenderCopy(mTexture, &srcRect, &destRect);
 }
 
 void LTexture::load_image(char* path)
@@ -28,7 +28,7 @@ void LTexture::load_image(char* path)
 	else
 	{
 		SDL_SetColorKey(loadedSurface, SDL_TRUE, SDL_MapRGB(loadedSurface->format, 0, 0xFF, 0xFF));
-		mTexture = theApp.gRenderer.CreateTextureFromSurface(loadedSurface);
+		mTexture = theApp.MyGUI.gRenderer.CreateTextureFromSurface(loadedSurface);
 
 		if (mTexture == NULL)
 			Error("LTexture.cpp", "void LTexture::load_image(char* path)", "ÎÆÀíäÖÈ¾Ê§°Ü");
@@ -52,7 +52,7 @@ void LTexture::loadFromRenderedText(char *text, SDL_Color textColor, bool debug)
 	else
 		textSurface = TTF_RenderText_Blended(gFont1, text, textColor);
 
-	mTexture = theApp.gRenderer.CreateTextureFromSurface(textSurface);
+	mTexture = theApp.MyGUI.gRenderer.CreateTextureFromSurface(textSurface);
 	mWidth = textSurface->w;
 	mHeight = textSurface->h;
 	SDL_FreeSurface(textSurface);
