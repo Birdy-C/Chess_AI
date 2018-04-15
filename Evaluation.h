@@ -27,6 +27,7 @@ const BitBoard FileFBB = FileABB << 5;
 const BitBoard FileGBB = FileABB << 6;
 const BitBoard FileHBB = FileABB << 7;
 
+// Rank 的记录和棋盘相反 因为是从坐上开始的
 const BitBoard Rank1BB = 0xFF;
 const BitBoard Rank2BB = Rank1BB << (8 * 1);
 const BitBoard Rank3BB = Rank1BB << (8 * 2);

@@ -149,15 +149,18 @@ public:
 	//evaluate function
 	void init_Eval();
 	void init_attackArea();
+	_Score_ evaluate_pieces();
 	int init_phase(Phase & gamePhase, _Score_ * non_pawn_material);
 
 	_Value_ evaluation(const bool &side);
 	_Score_ value_Material();
 	_Score_ value_Space(BitBoard * attackAreaWhite, BitBoard * attackAreaBlack);
-	_Score_ value_Mobility();
+	//_Score_ value_Mobility();
 	_Score_ value_Imbalance();
 	_Score_ value_Pawn();
 	template<bool Us> _Score_ pawn_evaluate();
+	//template<Color Us, PieceType Pt>
+	//_Score_ evaluate_pieces(bool color, int chesstype);
 	//_Value_ value_Pieces();
 	//template<Color Us, PieceType Pt>
 	//_Value_ evaluate_pieces();

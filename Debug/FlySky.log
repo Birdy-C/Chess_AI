@@ -1,20 +1,19 @@
-﻿  Pawn.cpp
-Pawn.cpp(109): warning C4244: “参数”: 从“BitBoard”转换到“const _Pos_”，可能丢失数据
-  Pawn.cpp(139): note: 参见对正在编译的函数 模板 实例化“_Score_ ChessBoard::pawn_evaluate<WHITE_SIDE>(void)”的引用
-Pawn.cpp(110): warning C4244: “参数”: 从“BitBoard”转换到“const _Pos_”，可能丢失数据
-Pawn.cpp(110): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
-Pawn.cpp(113): warning C4244: “参数”: 从“BitBoard”转换到“const _Coordinate_”，可能丢失数据
-Pawn.cpp(122): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
-Pawn.cpp(122): warning C4244: “参数”: 从“BitBoard”转换到“const _Pos_”，可能丢失数据
-Pawn.cpp(122): warning C4244: “+=”: 从“_Score_”转换到“_Value_”，可能丢失数据
-Pawn.cpp(125): warning C4244: “-=”: 从“const _Score_”转换到“_Value_”，可能丢失数据
-Pawn.cpp(131): warning C4244: “-=”: 从“const _Score_”转换到“_Value_”，可能丢失数据
-Pawn.cpp(91): warning C4101: “b”: 未引用的局部变量
-Pawn.cpp(92): warning C4101: “lever”: 未引用的局部变量
-Pawn.cpp(93): warning C4101: “backward”: 未引用的局部变量
-Pawn.cpp(91): warning C4101: “stoppers”: 未引用的局部变量
-Pawn.cpp(92): warning C4101: “leverPush”: 未引用的局部变量
-  Evaluation.cpp
+﻿  Evaluation.cpp
+Evaluation.cpp(204): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
+Evaluation.cpp(224): warning C4244: “+=”: 从“const _Score_”转换到“_Value_”，可能丢失数据
+Evaluation.cpp(234): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
+Evaluation.cpp(239): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
+Evaluation.cpp(276): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
+Evaluation.cpp(296): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
+Evaluation.cpp(307): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
+Evaluation.cpp(318): warning C4244: “+=”: 从“const _Score_”转换到“_Value_”，可能丢失数据
+Evaluation.cpp(328): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
+Evaluation.cpp(333): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
+Evaluation.cpp(363): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
+Evaluation.cpp(374): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
+Evaluation.cpp(207): warning C4390: “;”: 找到空的受控语句；这是否是有意的?
+Evaluation.cpp(310): warning C4390: “;”: 找到空的受控语句；这是否是有意的?
+  Draw.cpp
   正在生成代码...
   FlySky.vcxproj -> E:\Chess_AI\Debug\FlySky.exe
   FlySky.vcxproj -> E:\Chess_AI\Debug\FlySky.pdb (Full PDB)
