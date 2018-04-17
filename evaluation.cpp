@@ -62,6 +62,34 @@ const _Score_ Outpost[][2] = {
 // friendly pawn on the rook file.
 const _Score_ RookOnFile[] = { S(20, 7), S(45, 20) };
 
+// ThreatByMinor/ByRook[attacked PieceType] contains bonuses according to
+// which piece type attacks which one. Attacks on lesser pieces which are
+// pawn-defended are not considered.
+const _Score_ ThreatByMinor[8] = {
+	S(0, 0), S(0, 33), S(45, 43), S(46, 47), S(72, 107), S(48, 118)
+};
+
+const _Score_ ThreatByRook[8] = {
+	S(0, 0), S(0, 25), S(40, 62), S(40, 59), S(0, 34), S(35, 48)
+};
+
+// ThreatByKing[on one/on many] contains bonuses for king attacks on
+// pawns or pieces which are not pawn-defended.
+const _Score_ ThreatByKing[] = { S(3, 62), S(9, 138) };
+
+// Passed[mg/eg][Rank] contains midgame and endgame bonuses for passed pawns.
+// We don't use a Score because we process the two components independently.
+//const Value Passed[][8] = {
+//	{ V(0), V(5), V(5), V(31), V(73), V(166), V(252) },
+//	{ V(0), V(7), V(14), V(38), V(73), V(166), V(252) }
+//};
+
+// PassedFile[File] contains a bonus according to the file of a passed pawn
+const _Score_ PassedFile[8] = {
+	S(9, 10), S(2, 10), S(1, -8), S(-20,-12),
+	S(-20,-12), S(1, -8), S(2, 10), S(9, 10)
+};
+
 // Data members
 //const BitBoard& pos;
 
@@ -71,7 +99,8 @@ _Value_ mobility[_SIDE_COUNT_] = { 0, 0 };
 // attackedBy[color][piece type] is a bitboard representing all squares
 // attacked by a given color and piece type. Special "piece types" which are
 // also calculated are QUEEN_DIAGONAL and ALL_PIECES.
-BitBoard attackedBy[_SIDE_COUNT_][CHESS_PATTERN];
+
+//BitBoard attackedBy[_SIDE_COUNT_][CHESS_PATTERN];
 BitBoard attackAreaWhite[CHESS_PATTERN] = { 0 };
 BitBoard attackAreaBlack[CHESS_PATTERN] = { 0 };
 
@@ -119,394 +148,10 @@ void ChessBoard::init_Eval()
 	pawn_init();
 }
 
-
- //函数简介：初始化攻击范围，己方棋子也会被算进攻击范围	
-void ChessBoard::init_attackArea()
+int relative_rank(bool c, _Pos_ s) 
 {
-	//P
-	
-	attackAreaWhite[chess_P] = (BB[WHITE_SIDE][chess_P] & 0x7F7F7F7F7F7F7F7FULL) >> 7 | (BB[WHITE_SIDE][chess_P] & 0xFEFEFEFEFEFEFEFEULL) >> 9;
-	attackAreaBlack[chess_P] = (BB[BLACK_SIDE][chess_P] & 0xFEFEFEFEFEFEFEFEULL) << 7 | (BB[BLACK_SIDE][chess_P] & 0x7F7F7F7F7F7F7F7FULL) << 9;
-	attackAreaWhite[chess_K] = AttackRange[List[chess_K][0]];
-	attackAreaBlack[chess_K] = AttackRange[List[chess_K | BLACK_CHESS_BIT][0]];
-	/*
-	if (count_IsNormal())
-	{
-		attackAreaWhite[chess_N] = AttackRange[List[chess_N][0]] | AttackRange[List[chess_N][1]];
-		attackAreaWhite[chess_B] = AttackRange[List[chess_B][0]] | AttackRange[List[chess_B][1]];
-		attackAreaWhite[chess_R] = AttackRange[List[chess_R][0]] | AttackRange[List[chess_R][1]];
-		attackAreaWhite[chess_Q] = AttackRange[List[chess_Q][0]];	
-		attackAreaBlack[chess_N] = AttackRange[List[chess_N | BLACK_CHESS_BIT][0]] | AttackRange[List[chess_N | BLACK_CHESS_BIT][1]];
-		attackAreaBlack[chess_B] = AttackRange[List[chess_B | BLACK_CHESS_BIT][0]] | AttackRange[List[chess_B | BLACK_CHESS_BIT][1]];
-		attackAreaBlack[chess_R] = AttackRange[List[chess_R | BLACK_CHESS_BIT][0]] | AttackRange[List[chess_R | BLACK_CHESS_BIT][1]];
-		attackAreaBlack[chess_Q] = AttackRange[List[chess_Q | BLACK_CHESS_BIT][0]];
-	}
-	else
-	{
-		for (_ChessPattern_ pt = chess_N; pt <= chess_Q; ++pt)
-		{
-			attackAreaWhite[pt] = 0ULL;
-			for (size_t pt_id = 0; pt_id < chess_count(WHITE_SIDE, pt); pt_id++)
-				attackAreaWhite[pt] |= AttackRange[List[pt][pt_id]];
-			attackAreaBlack[pt] = 0ULL;
-			for (size_t pt_id = 0; pt_id < chess_count(BLACK_SIDE, pt); pt_id++)
-				attackAreaBlack[pt] |= AttackRange[List[pt | BLACK_CHESS_BIT][pt_id]];
-		}
-	}
-	*/
-
-	//attackAreaWhite[chess_All] = attackAreaWhite[chess_P] | attackAreaWhite[chess_N] | attackAreaWhite[chess_B] | attackAreaWhite[chess_R] | attackAreaWhite[chess_Q] | attackAreaWhite[chess_K];
-	//attackAreaBlack[chess_All] = attackAreaBlack[chess_P] | attackAreaBlack[chess_N] | attackAreaBlack[chess_B] | attackAreaBlack[chess_R] | attackAreaBlack[chess_Q] | attackAreaBlack[chess_K];
-	mobility[WHITE_SIDE] = mobility[BLACK_SIDE] = 0;
-
-	attackAreaWhite[chess_All] = attackAreaWhite[chess_K];
-	attackedBy2[WHITE_SIDE] = attackAreaWhite[chess_All] & attackAreaWhite[chess_P];
-	attackAreaWhite[chess_All] = attackAreaWhite[chess_All] | attackAreaWhite[chess_P];
-
-	attackAreaBlack[chess_All] = attackAreaBlack[chess_K];
-	attackedBy2[BLACK_SIDE] = attackAreaBlack[chess_All] & attackAreaBlack[chess_P];
-	attackAreaBlack[chess_All] = attackAreaBlack[chess_All] | attackAreaBlack[chess_P];
-
-	BitBoard b;
-	BitBoard LowRanks; //(Us == WHITE ? Rank2BB | Rank3BB : Rank7BB | Rank6BB);
-	LowRanks = Rank7BB | Rank6BB;
-	// Find our pawns on the first two ranks, and those which are blocked
-	b = BB[WHITE_SIDE][chess_P] & ((BB[WHITE_SIDE][chess_All] | BB[BLACK_SIDE][chess_All]) >> 8 | LowRanks);
-
-
-	// Squares occupied by those pawns, by our king, or controlled by enemy pawns
-	// are excluded from the mobility area.
-	//mobilityArea[WHITE_SIDE] = ~(b | pos.square<KING>(Us) | attackAreaBlack[chess_P]);
-	mobilityArea[WHITE_SIDE] = ~(b |  attackAreaBlack[chess_P]); //King 的周围一圈
-	
-	LowRanks = Rank2BB | Rank3BB;
-	b = BB[BLACK_SIDE][chess_P] & ((BB[WHITE_SIDE][chess_All] | BB[BLACK_SIDE][chess_All]) << 8 | LowRanks);
-	mobilityArea[BLACK_SIDE] = ~(b | attackAreaWhite[chess_P]); //King 的周围一圈
-
+	return (s >> 3) ^ ((int)c * 7);
 }
-
-// 单个棋子的评价，包括对mobility，attack和king theat（虽然没加……）的更新
-_Score_  ChessBoard::evaluate_pieces() {
-
-	BitBoard b, bb;
-	_Score_ score = 0;
-	BitBoard OutpostRanks;
-	for (_ChessPattern_ pt = chess_N; pt <= chess_Q; ++pt)
-	{
-		//attackAreaWhite[pt] = 0ULL;
-		//const Bitboard OutpostRanks = (Us == WHITE ? Rank4BB | Rank5BB | Rank6BB
-		//	: Rank5BB | Rank4BB | Rank3BB);
-
-		OutpostRanks = Rank5BB | Rank4BB | Rank3BB;
-		for (size_t pt_id = 0; pt_id < chess_count(WHITE_SIDE, pt); pt_id++)
-		{
-			//attackAreaWhite[pt] |= AttackRange[List[pt][pt_id]];
-			_Pos_ pos = List[pt][pt_id];
-			BitBoard s = (BitBoard)1 << pos;
-			b = AttackRange[pos];
-			//if (pinners(WHITE_SIDE) & s)
-			//	;			//b &= LineBB[pos.square<KING>(Us)][s];//这里省略了计算在被牵制线上的移动
-
-			attackedBy2[WHITE_SIDE] |= attackAreaWhite[chess_All] & b;
-			attackAreaWhite[chess_All] |= attackAreaWhite[pt] |= b;
-
-			//if (Pt == QUEEN)
-			//	attackedBy[Us][QUEEN_DIAGONAL] |= b & PseudoAttacks[BISHOP][s];
-
-			//if (b & kingRing[Them])
-			//{
-			//	kingAttackersCount[Us]++;
-			//	kingAttackersWeight[Us] += KingAttackWeights[Pt];
-			//	kingAdjacentZoneAttacksCount[Us] += popcount(b & attackedBy[Them][KING]);
-			//}
-
-			int mob = BitCount(b & mobilityArea[WHITE_SIDE]);
-
-			mobility[WHITE_SIDE] += MobilityBonus[pt][mob];
-
-			// Bonus for this piece as a king protector
-			//score += KingProtector[Pt - 2] * distance(s, pos.square<KING>(Us));
-
-			if (pt == chess_B || pt == chess_N)
-			{
-				// Bonus for outpost squares
-				bb = OutpostRanks & ~attackAreaBlack[chess_P];
-				if (bb & s)
-					score += Outpost[pt == chess_B][bool(attackAreaWhite[chess_P] & s)] * 2;
-				else
-				{
-					bb &= b & ~BB[WHITE_SIDE][chess_All];
-					if (bb)
-						score += Outpost[pt == chess_B][bool(attackAreaWhite[chess_P] & bb)];
-				}
-				// Bonus when behind a pawn
-				
-				if (pos >> 3 > 4
-					&& (BB[WHITE_SIDE][chess_P] & (s << 8)))
-					score += MinorBehindPawn;
-
-				if (pt == chess_B)
-				{
-					// Penalty for pawns on the same color square as the bishop
-					//score -= BishopPawns * pe->pawns_on_same_color_squares(Us, s);
-
-					// Bonus for bishop on a long diagonal which can "see" both center squares
-					if (BitCount(Center & b) > 1)
-						score += LongRangedBishop;
-				}
-
-				// An important Chess960 pattern: A cornered bishop blocked by a friendly
-				// pawn diagonally in front of it is a very serious problem, especially
-				// when that pawn is also blocked.
-				// 省掉了这一部分
-			}
-
-			if (pt == chess_R)
-			{
-				// Bonus for aligning with enemy pawns on the same rank/file 和对方在同一条横/纵线上
-				BitBoard t;
-				t = FileABB << (pos & 7) | Rank1BB << (pos >> 3);
-				if (pos >> 3 <= 3)
-					score += RookOnPawn * BitCount(BB[BLACK_SIDE][chess_P] & (pos));
-
-				// Bonus when on an open or semi-open file 在开放或半开放的路线上
-				t = Rank1BB << (pos >> 3);
-
-				if (t & BB[WHITE_SIDE][chess_P])
-					score += RookOnFile[bool(t&BB[BLACK_SIDE][chess_P])];
-
-				// Penalty when trapped by the king, even more if the king cannot castle
-				
-				else if (mob <= 3)
-				{
-					//Square ksq = pos.square<KING>(Us);
-
-					//if (((file_of(ksq) < FILE_E) == (file_of(s) < file_of(ksq)))
-					//	&& !pe->semiopen_side(Us, file_of(ksq), file_of(s) < file_of(ksq)))
-					//	score -= (TrappedRook - make_score(mob * 22, 0)) * (1 + !pos.can_castle(Us));
-				}
-				
-			}
-
-			if (pt == chess_Q)
-			{
-				// Penalty if any relative pin or discovered attack against the queen
-				// 这里需要计算queen的牵制
-				//Bitboard pinners;
-				if (pinners(WHITE_SIDE) & (1 <<pos))	//		if (pos.slider_blockers(pos.pieces(Them, ROOK, BISHOP), s, pinners))
-					score -= WeakQueen;
-			}
-		}
-
-
-		OutpostRanks = Rank4BB | Rank5BB | Rank6BB;
-
-		for (size_t pt_id = 0; pt_id < chess_count(BLACK_SIDE, pt); pt_id++)
-		{
-			_Pos_ pos = List[pt | BLACK_CHESS_BIT][pt_id];
-
-			BitBoard s = (BitBoard)1 << pos;
-			b = AttackRange[pos];
-			//if (pinners(BLACK_SIDE) & s)
-			//	;			//b &= LineBB[pos.square<KING>(Us)][s];//这里省略了计算在被牵制线上的移动
-
-			attackedBy2[BLACK_SIDE] |= attackAreaBlack[chess_All] & b;
-			attackAreaBlack[chess_All] |= attackAreaBlack[pt] |= b;
-
-
-			int mob = BitCount(b & mobilityArea[BLACK_SIDE]);
-
-			mobility[BLACK_SIDE] += MobilityBonus[pt][mob];
-
-			// Bonus for this piece as a king protector
-			//score += KingProtector[Pt - 2] * distance(s, pos.square<KING>(Us));
-
-			if (pt == chess_B || pt == chess_N)
-			{
-				// Bonus for outpost squares
-				bb = OutpostRanks & ~attackAreaWhite[chess_P];
-				if (bb & s)
-					score -= Outpost[pt == chess_B][bool(attackAreaBlack[chess_P] & s)] * 2;
-				else
-				{
-					bb &= b & ~BB[BLACK_SIDE][chess_All];
-					if (bb)
-						score -= Outpost[pt == chess_B][bool(attackAreaBlack[chess_P] & bb)];
-				}
-
-				// Bonus when behind a pawn
-
-				if (pos >> 3 < 3
-					&& (BB[BLACK_SIDE][chess_P] & (s >> 8)))
-					score -= MinorBehindPawn;
-
-				if (pt == chess_B)
-				{
-					// Bonus for bishop on a long diagonal which can "see" both center squares
-					if (BitCount(Center & b) > 1)
-						score -= LongRangedBishop;
-				}
-
-			}
-
-			if (pt == chess_R)
-			{
-				// Bonus for aligning with enemy pawns on the same rank/file 和对方在同一条横/纵线上
-				BitBoard t;
-				t = FileABB << (pos & 7) | Rank1BB << (pos >> 3);
-				if (pos >> 3 <= 3)
-					score -= RookOnPawn * BitCount(BB[WHITE_SIDE][chess_P] & pos);
-
-				// Bonus when on an open or semi-open file 在开放或半开放的路线上
-				t = Rank1BB << (pos >> 3);
-
-				if (t & BB[BLACK_SIDE][chess_P])
-					score -= RookOnFile[bool(t & BB[WHITE_SIDE][chess_P])];
-
-				// Penalty when trapped by the king, even more if the king cannot castle
-
-				else if (mob <= 3)
-				{
-				}
-
-			}
-			if (pt == chess_Q)
-			{
-				if (pinners(BLACK_SIDE) & (1 << pos))	//		if (pos.slider_blockers(pos.pieces(Them, ROOK, BISHOP), s, pinners))
-					score += WeakQueen;
-			}
-		}
-	}
-
-
-	return score;
-}
-
-/*
-template<Tracing T>  template<Color Us>
-Score Evaluation<T>::evaluate_threats() {
-
-	const Color     Them = (Us == WHITE ? BLACK : WHITE);
-	const Direction Up = (Us == WHITE ? NORTH : SOUTH);
-	const Direction Left = (Us == WHITE ? NORTH_WEST : SOUTH_EAST);
-	const Direction Right = (Us == WHITE ? NORTH_EAST : SOUTH_WEST);
-	const Bitboard  TRank3BB = (Us == WHITE ? Rank3BB : Rank6BB);
-
-	Bitboard b, weak, defended, stronglyProtected, safeThreats;
-	Score score = SCORE_ZERO;
-
-	// Non-pawn enemies attacked by a pawn
-	weak = (pos.pieces(Them) ^ pos.pieces(Them, PAWN)) & attackedBy[Us][PAWN];
-
-	if (weak)
-	{
-		b = pos.pieces(Us, PAWN) & (~attackedBy[Them][ALL_PIECES]
-			| attackedBy[Us][ALL_PIECES]);
-
-		safeThreats = (shift<Right>(b) | shift<Left>(b)) & weak;
-
-		score += ThreatBySafePawn * popcount(safeThreats);
-	}
-
-	// Squares strongly protected by the opponent, either because they attack the
-	// square with a pawn, or because they attack the square twice and we don't.
-	stronglyProtected = attackedBy[Them][PAWN]
-		| (attackedBy2[Them] & ~attackedBy2[Us]);
-
-	// Non-pawn enemies, strongly protected
-	defended = (pos.pieces(Them) ^ pos.pieces(Them, PAWN))
-		& stronglyProtected;
-
-	// Enemies not strongly protected and under our attack
-	weak = pos.pieces(Them)
-		& ~stronglyProtected
-		&  attackedBy[Us][ALL_PIECES];
-
-	// Add a bonus according to the kind of attacking pieces
-	if (defended | weak)
-	{
-		b = (defended | weak) & (attackedBy[Us][KNIGHT] | attackedBy[Us][BISHOP]);
-		while (b)
-		{
-			Square s = pop_lsb(&b);
-			score += ThreatByMinor[type_of(pos.piece_on(s))];
-			if (type_of(pos.piece_on(s)) != PAWN)
-				score += ThreatByRank * (int)relative_rank(Them, s);
-		}
-
-		b = (pos.pieces(Them, QUEEN) | weak) & attackedBy[Us][ROOK];
-		while (b)
-		{
-			Square s = pop_lsb(&b);
-			score += ThreatByRook[type_of(pos.piece_on(s))];
-			if (type_of(pos.piece_on(s)) != PAWN)
-				score += ThreatByRank * (int)relative_rank(Them, s);
-		}
-
-		score += Hanging * popcount(weak & ~attackedBy[Them][ALL_PIECES]);
-
-		b = weak & attackedBy[Us][KING];
-		if (b)
-			score += ThreatByKing[more_than_one(b)];
-	}
-
-	// Bonus for opponent unopposed weak pawns
-	if (pos.pieces(Us, ROOK, QUEEN))
-		score += WeakUnopposedPawn * pe->weak_unopposed(Them);
-
-	// Find squares where our pawns can push on the next move
-	b = shift<Up>(pos.pieces(Us, PAWN)) & ~pos.pieces();
-	b |= shift<Up>(b & TRank3BB) & ~pos.pieces();
-
-	// Keep only the squares which are not completely unsafe
-	b &= ~attackedBy[Them][PAWN]
-		& (attackedBy[Us][ALL_PIECES] | ~attackedBy[Them][ALL_PIECES]);
-
-	// Add a bonus for each new pawn threats from those squares
-	b = (shift<Left>(b) | shift<Right>(b))
-		&  pos.pieces(Them)
-		& ~attackedBy[Us][PAWN];
-
-	score += ThreatByPawnPush * popcount(b);
-
-	// Add a bonus for safe slider attack threats on opponent queen
-	safeThreats = ~pos.pieces(Us) & ~attackedBy2[Them] & attackedBy2[Us];
-	b = (attackedBy[Us][BISHOP] & attackedBy[Them][QUEEN_DIAGONAL])
-		| (attackedBy[Us][ROOK] & attackedBy[Them][QUEEN] & ~attackedBy[Them][QUEEN_DIAGONAL]);
-
-	score += ThreatByAttackOnQueen * popcount(b & safeThreats);
-
-	if (T)
-		Trace::add(THREAT, Us, score);
-
-	return score;
-}
-*/
-
-//函数简介：计算现在所处的状态 0 代表开局 255 残局
-int ChessBoard::init_phase(Phase& gamePhase,_Score_* non_pawn_material)
-{
-	non_pawn_material[WHITE_SIDE] = 0;
-	non_pawn_material[BLACK_SIDE] = 0;
-
-	for (int chess = chess_N; chess <= chess_Q; chess++)
-	{
-		non_pawn_material[WHITE_SIDE] += BitCount(BB[WHITE_SIDE][chess]) * Piece_Value[chess];
-		non_pawn_material[BLACK_SIDE] += BitCount(BB[BLACK_SIDE][chess]) * Piece_Value[chess];
-	}
-
-	_Score_ npm_w = non_pawn_material[WHITE_SIDE];
-	_Score_ npm_b = non_pawn_material[BLACK_SIDE];
-
-	//_Score_ npm = std::max(EndgameLimit, std::min(npm_w + npm_b, MidgameLimit));
-	_Score_ npm;
-	npm = npm_w + npm_b < MidgameLimit ? npm_w + npm_b: MidgameLimit;
-	npm = EndgameLimit > npm ? EndgameLimit : npm;
-	// Map total non-pawn material into [PHASE_ENDGAME, PHASE_MIDGAME]
-	gamePhase = Phase(((npm - EndgameLimit) * PHASE_MIDGAME) / (MidgameLimit - EndgameLimit));
-	return 0;
-}
-
 
 //====================================具体估值====================================//
 
@@ -515,7 +160,7 @@ _Value_ ChessBoard::evaluation(const bool &side)
 {
 	//白方为视角 这里开七个最后一个记录总的
 
-	bool test_mode = true;
+	bool test_mode = false;
 
 	_Score_ result = 0;
 	_Score_ score = 0;
@@ -526,14 +171,14 @@ _Value_ ChessBoard::evaluation(const bool &side)
 	result = value_Material();
 	score += result;
 	if(test_mode)
-		std::cout <<" value_Material \t "<< (int16_t)(result & 0xffff) << '\t' << (int16_t)(result >> 16) << std::endl;
+		std::cout <<" _Material \t "<< (int16_t)(result & 0xffff) << '\t' << (int16_t)(result >> 16) << std::endl;
 
 
 	// Imbalance 主要是棋子数量的影响 残局的判断还没加
 	result = value_Imbalance();
 	score += result;
 	if (test_mode)
-		std::cout << " value_Imbalance \t " << (int16_t)(result & 0xffff) << '\t' << (int16_t)(result >> 16) << std::endl;
+		std::cout << "_Imbalance \t " << (int16_t)(result & 0xffff) << '\t' << (int16_t)(result >> 16) << std::endl;
 
 	// 兵
 	result = value_Pawn();
@@ -571,6 +216,13 @@ _Value_ ChessBoard::evaluation(const bool &side)
 	}
 
 
+	result = evaluate_threats(WHITE_SIDE) - evaluate_threats(BLACK_SIDE);
+	score += result;
+	if (test_mode)
+		std::cout << " threats \t " << (int16_t)(result & 0xffff) << '\t' << (int16_t)(result >> 16) << std::endl;
+
+	if (test_mode)
+		std::cout << " ALL    \t " << (int16_t)(score & 0xffff) << '\t' << (int16_t)(score >> 16) << std::endl;
 
 
 	// Interpolate between a middlegame and a (scaled by 'sf') endgame score
@@ -584,6 +236,97 @@ _Value_ ChessBoard::evaluation(const bool &side)
 	return side ? v : -v;
 }
 
+
+//函数简介：初始化攻击范围，己方棋子也会被算进攻击范围	
+void ChessBoard::init_attackArea()
+{
+	//P
+
+	attackAreaWhite[chess_P] = (BB[WHITE_SIDE][chess_P] & 0x7F7F7F7F7F7F7F7FULL) >> 7 | (BB[WHITE_SIDE][chess_P] & 0xFEFEFEFEFEFEFEFEULL) >> 9;
+	attackAreaBlack[chess_P] = (BB[BLACK_SIDE][chess_P] & 0xFEFEFEFEFEFEFEFEULL) << 7 | (BB[BLACK_SIDE][chess_P] & 0x7F7F7F7F7F7F7F7FULL) << 9;
+	attackAreaWhite[chess_K] = AttackRange[List[chess_K][0]];
+	attackAreaBlack[chess_K] = AttackRange[List[chess_K | BLACK_CHESS_BIT][0]];
+
+	/*
+	if (count_IsNormal())
+	{
+	attackAreaWhite[chess_N] = AttackRange[List[chess_N][0]] | AttackRange[List[chess_N][1]];
+	attackAreaWhite[chess_B] = AttackRange[List[chess_B][0]] | AttackRange[List[chess_B][1]];
+	attackAreaWhite[chess_R] = AttackRange[List[chess_R][0]] | AttackRange[List[chess_R][1]];
+	attackAreaWhite[chess_Q] = AttackRange[List[chess_Q][0]];
+	attackAreaBlack[chess_N] = AttackRange[List[chess_N | BLACK_CHESS_BIT][0]] | AttackRange[List[chess_N | BLACK_CHESS_BIT][1]];
+	attackAreaBlack[chess_B] = AttackRange[List[chess_B | BLACK_CHESS_BIT][0]] | AttackRange[List[chess_B | BLACK_CHESS_BIT][1]];
+	attackAreaBlack[chess_R] = AttackRange[List[chess_R | BLACK_CHESS_BIT][0]] | AttackRange[List[chess_R | BLACK_CHESS_BIT][1]];
+	attackAreaBlack[chess_Q] = AttackRange[List[chess_Q | BLACK_CHESS_BIT][0]];
+	}
+	else
+	{
+	for (_ChessPattern_ pt = chess_N; pt <= chess_Q; ++pt)
+	{
+	attackAreaWhite[pt] = 0ULL;
+	for (size_t pt_id = 0; pt_id < chess_count(WHITE_SIDE, pt); pt_id++)
+	attackAreaWhite[pt] |= AttackRange[List[pt][pt_id]];
+	attackAreaBlack[pt] = 0ULL;
+	for (size_t pt_id = 0; pt_id < chess_count(BLACK_SIDE, pt); pt_id++)
+	attackAreaBlack[pt] |= AttackRange[List[pt | BLACK_CHESS_BIT][pt_id]];
+	}
+	}
+	*/
+
+	//attackAreaWhite[chess_All] = attackAreaWhite[chess_P] | attackAreaWhite[chess_N] | attackAreaWhite[chess_B] | attackAreaWhite[chess_R] | attackAreaWhite[chess_Q] | attackAreaWhite[chess_K];
+	//attackAreaBlack[chess_All] = attackAreaBlack[chess_P] | attackAreaBlack[chess_N] | attackAreaBlack[chess_B] | attackAreaBlack[chess_R] | attackAreaBlack[chess_Q] | attackAreaBlack[chess_K];
+	mobility[WHITE_SIDE] = mobility[BLACK_SIDE] = 0;
+
+	attackAreaWhite[chess_All] = attackAreaWhite[chess_K];
+	attackedBy2[WHITE_SIDE] = attackAreaWhite[chess_All] & attackAreaWhite[chess_P];
+	attackAreaWhite[chess_All] = attackAreaWhite[chess_All] | attackAreaWhite[chess_P];
+
+	attackAreaBlack[chess_All] = attackAreaBlack[chess_K];
+	attackedBy2[BLACK_SIDE] = attackAreaBlack[chess_All] & attackAreaBlack[chess_P];
+	attackAreaBlack[chess_All] = attackAreaBlack[chess_All] | attackAreaBlack[chess_P];
+
+	BitBoard b;
+	BitBoard LowRanks; //(Us == WHITE ? Rank2BB | Rank3BB : Rank7BB | Rank6BB);
+	LowRanks = Rank7BB | Rank6BB;
+	// Find our pawns on the first two ranks, and those which are blocked
+	b = BB[WHITE_SIDE][chess_P] & ((BB[WHITE_SIDE][chess_All] | BB[BLACK_SIDE][chess_All]) >> 8 | LowRanks);
+
+
+	// Squares occupied by those pawns, by our king, or controlled by enemy pawns
+	// are excluded from the mobility area.
+	//mobilityArea[WHITE_SIDE] = ~(b | pos.square<KING>(Us) | attackAreaBlack[chess_P]);
+	mobilityArea[WHITE_SIDE] = ~(b | attackAreaBlack[chess_P]); //King 的周围一圈
+
+	LowRanks = Rank2BB | Rank3BB;
+	b = BB[BLACK_SIDE][chess_P] & ((BB[WHITE_SIDE][chess_All] | BB[BLACK_SIDE][chess_All]) << 8 | LowRanks);
+	mobilityArea[BLACK_SIDE] = ~(b | attackAreaWhite[chess_P]); //King 的周围一圈
+
+}
+
+
+//函数简介：计算现在所处的状态 0 代表开局 255 残局
+int ChessBoard::init_phase(Phase& gamePhase, _Score_* non_pawn_material)
+{
+	non_pawn_material[WHITE_SIDE] = 0;
+	non_pawn_material[BLACK_SIDE] = 0;
+
+	for (int chess = chess_N; chess <= chess_Q; chess++)
+	{
+		non_pawn_material[WHITE_SIDE] += BitCount(BB[WHITE_SIDE][chess]) * Piece_Value[chess];
+		non_pawn_material[BLACK_SIDE] += BitCount(BB[BLACK_SIDE][chess]) * Piece_Value[chess];
+	}
+
+	_Score_ npm_w = non_pawn_material[WHITE_SIDE];
+	_Score_ npm_b = non_pawn_material[BLACK_SIDE];
+
+	//_Score_ npm = std::max(EndgameLimit, std::min(npm_w + npm_b, MidgameLimit));
+	_Score_ npm;
+	npm = npm_w + npm_b < MidgameLimit ? npm_w + npm_b : MidgameLimit;
+	npm = EndgameLimit > npm ? EndgameLimit : npm;
+	// Map total non-pawn material into [PHASE_ENDGAME, PHASE_MIDGAME]
+	gamePhase = Phase(((npm - EndgameLimit) * PHASE_MIDGAME) / (MidgameLimit - EndgameLimit));
+	return 0;
+}
 
 
 // 这个空间的函数在咸鱼里是黑白共用一个的
@@ -660,6 +403,334 @@ _Score_ ChessBoard::value_Space(BitBoard *attackAreaWhite, BitBoard *attackAreaB
 	score -= bonus * weight * weight / 16;
 
 	return S(score / 16, 0);
+}
+
+// evaluate_pieces() assigns bonuses and penalties to the pieces of a given
+// color and type.
+// 单个棋子的评价，包括对mobility，attack和king theat（虽然没加……）的更新
+_Score_ ChessBoard::evaluate_pieces() {
+
+	BitBoard b, bb;
+	_Score_ score = 0;
+	BitBoard OutpostRanks;
+	for (_ChessPattern_ pt = chess_N; pt <= chess_Q; ++pt)
+	{
+		attackAreaWhite[pt] = 0ULL;
+		//const Bitboard OutpostRanks = (Us == WHITE ? Rank4BB | Rank5BB | Rank6BB
+		//	: Rank5BB | Rank4BB | Rank3BB);
+
+		OutpostRanks = Rank5BB | Rank4BB | Rank3BB;
+		for (size_t pt_id = 0; pt_id < chess_count(WHITE_SIDE, pt); pt_id++)
+		{
+			//attackAreaWhite[pt] |= AttackRange[List[pt][pt_id]];
+			_Pos_ pos = List[pt][pt_id];
+			BitBoard s = (BitBoard)1 << pos;
+			b = AttackRange[pos];
+			//if (pinners(WHITE_SIDE) & s)
+			//	;			//b &= LineBB[pos.square<KING>(Us)][s];//这里省略了计算在被牵制线上的移动
+			attackedBy2[WHITE_SIDE] |= attackAreaWhite[chess_All] & b;
+			attackAreaWhite[chess_All] |= attackAreaWhite[pt] |= b;
+
+			//if (Pt == QUEEN)
+			//	attackedBy[Us][QUEEN_DIAGONAL] |= b & PseudoAttacks[BISHOP][s];
+
+			//if (b & kingRing[Them])
+			//{
+			//	kingAttackersCount[Us]++;
+			//	kingAttackersWeight[Us] += KingAttackWeights[Pt];
+			//	kingAdjacentZoneAttacksCount[Us] += popcount(b & attackedBy[Them][KING]);
+			//}
+
+			int mob = BitCount(b & mobilityArea[WHITE_SIDE]);
+
+			mobility[WHITE_SIDE] += MobilityBonus[pt - 1][mob];
+
+			// Bonus for this piece as a king protector
+			//score += KingProtector[Pt - 2] * distance(s, pos.square<KING>(Us));
+
+			if (pt == chess_B || pt == chess_N)
+			{
+				// Bonus for outpost squares
+				bb = OutpostRanks & ~attackAreaBlack[chess_P];
+				if (bb & s)
+					score += Outpost[pt == chess_B][bool(attackAreaWhite[chess_P] & s)] * 2;
+				else
+				{
+					bb &= b & ~BB[WHITE_SIDE][chess_All];
+					if (bb)
+						score += Outpost[pt == chess_B][bool(attackAreaWhite[chess_P] & bb)];
+				}
+				// Bonus when behind a pawn
+
+				if (pos >> 3 > 4
+					&& (BB[WHITE_SIDE][chess_P] & (s << 8)))
+					score += MinorBehindPawn;
+
+				if (pt == chess_B)
+				{
+					// Penalty for pawns on the same color square as the bishop
+					//score -= BishopPawns * pe->pawns_on_same_color_squares(Us, s);
+
+					// Bonus for bishop on a long diagonal which can "see" both center squares
+					if (BitCount(Center & b) > 1)
+						score += LongRangedBishop;
+				}
+
+				// An important Chess960 pattern: A cornered bishop blocked by a friendly
+				// pawn diagonally in front of it is a very serious problem, especially
+				// when that pawn is also blocked.
+				// 省掉了这一部分
+			}
+
+			if (pt == chess_R)
+			{
+				// Bonus for aligning with enemy pawns on the same rank/file 和对方在同一条横/纵线上
+				BitBoard t;
+				t = FileABB << (pos & 7) | Rank1BB << (pos >> 3);
+				if (pos >> 3 <= 3)
+					score += RookOnPawn * BitCount(BB[BLACK_SIDE][chess_P] & (pos));
+
+				// Bonus when on an open or semi-open file 在开放或半开放的路线上
+				t = Rank1BB << (pos >> 3);
+
+				if (t & BB[WHITE_SIDE][chess_P])
+					score += RookOnFile[bool(t&BB[BLACK_SIDE][chess_P])];
+
+				// Penalty when trapped by the king, even more if the king cannot castle
+
+				else if (mob <= 3)
+				{
+					//Square ksq = pos.square<KING>(Us);
+
+					//if (((file_of(ksq) < FILE_E) == (file_of(s) < file_of(ksq)))
+					//	&& !pe->semiopen_side(Us, file_of(ksq), file_of(s) < file_of(ksq)))
+					//	score -= (TrappedRook - make_score(mob * 22, 0)) * (1 + !pos.can_castle(Us));
+				}
+
+			}
+
+			if (pt == chess_Q)
+			{
+				// Penalty if any relative pin or discovered attack against the queen
+				// 这里需要计算queen的牵制
+				//Bitboard pinners;
+				if (pinners(WHITE_SIDE) & (1 << pos))	//		if (pos.slider_blockers(pos.pieces(Them, ROOK, BISHOP), s, pinners))
+					score -= WeakQueen;
+			}
+		}
+
+		attackAreaBlack[pt] = 0ULL;
+		OutpostRanks = Rank4BB | Rank5BB | Rank6BB;
+
+		for (size_t pt_id = 0; pt_id < chess_count(BLACK_SIDE, pt); pt_id++)
+		{
+			_Pos_ pos = List[pt | BLACK_CHESS_BIT][pt_id];
+
+			BitBoard s = (BitBoard)1 << pos;
+			b = AttackRange[pos];
+			//if (pinners(BLACK_SIDE) & s)
+			//	;			//b &= LineBB[pos.square<KING>(Us)][s];//这里省略了计算在被牵制线上的移动
+			attackedBy2[BLACK_SIDE] |= attackAreaBlack[chess_All] & b;
+			attackAreaBlack[chess_All] |= attackAreaBlack[pt] |= b;
+
+
+			int mob = BitCount(b & mobilityArea[BLACK_SIDE]);
+
+			mobility[BLACK_SIDE] += MobilityBonus[pt - 1][mob];
+
+			// Bonus for this piece as a king protector
+			//score += KingProtector[Pt - 2] * distance(s, pos.square<KING>(Us));
+
+			if (pt == chess_B || pt == chess_N)
+			{
+				// Bonus for outpost squares
+				bb = OutpostRanks & ~attackAreaWhite[chess_P];
+				if (bb & s)
+					score -= Outpost[pt == chess_B][bool(attackAreaBlack[chess_P] & s)] * 2;
+				else
+				{
+					bb &= b & ~BB[BLACK_SIDE][chess_All];
+					if (bb)
+						score -= Outpost[pt == chess_B][bool(attackAreaBlack[chess_P] & bb)];
+				}
+
+				// Bonus when behind a pawn
+
+				if (pos >> 3 < 3
+					&& (BB[BLACK_SIDE][chess_P] & (s >> 8)))
+					score -= MinorBehindPawn;
+
+				if (pt == chess_B)
+				{
+					// Bonus for bishop on a long diagonal which can "see" both center squares
+					if (BitCount(Center & b) > 1)
+						score -= LongRangedBishop;
+				}
+
+			}
+
+			if (pt == chess_R)
+			{
+				// Bonus for aligning with enemy pawns on the same rank/file 和对方在同一条横/纵线上
+				BitBoard t;
+				t = FileABB << (pos & 7) | Rank1BB << (pos >> 3);
+				if (pos >> 3 <= 3)
+					score -= RookOnPawn * BitCount(BB[WHITE_SIDE][chess_P] & pos);
+
+				// Bonus when on an open or semi-open file 在开放或半开放的路线上
+				t = Rank1BB << (pos >> 3);
+
+				if (t & BB[BLACK_SIDE][chess_P])
+					score -= RookOnFile[bool(t & BB[WHITE_SIDE][chess_P])];
+
+				// Penalty when trapped by the king, even more if the king cannot castle
+
+				else if (mob <= 3)
+				{
+				}
+
+			}
+			if (pt == chess_Q)
+			{
+				if (pinners(BLACK_SIDE) & (1 << pos))	//		if (pos.slider_blockers(pos.pieces(Them, ROOK, BISHOP), s, pinners))
+					score += WeakQueen;
+			}
+		}
+	}
+
+
+	return score;
+}
+
+
+// evaluate_threats() assigns bonuses according to the types of the attacking
+// and the attacked pieces.
+
+_Score_ ChessBoard::evaluate_threats(bool Us) {
+
+	const bool     Them = (Us == WHITE_SIDE ? BLACK_SIDE : WHITE_SIDE);
+	//const Direction Up = (Us == WHITE_SIDE ? NORTH : SOUTH);
+	//const Direction Left = (Us == WHITE_SIDE ? NORTH_WEST : SOUTH_EAST);
+	//const Direction Right = (Us == WHITE_SIDE ? NORTH_EAST : SOUTH_WEST);
+	const BitBoard  TRank3BB = (Us == WHITE_SIDE ? Rank6BB : Rank3BB);
+	BitBoard *attackedBy[2];
+	attackedBy[Us] = (Us == WHITE_SIDE ? attackAreaWhite : attackAreaBlack);
+	attackedBy[Them] = (Them == WHITE_SIDE ? attackAreaWhite : attackAreaBlack);
+
+	BitBoard b, weak, defended, stronglyProtected, safeThreats;
+	_Score_ score = 0;
+
+	// Non-pawn enemies attacked by a pawn
+	weak = (BB[Them][chess_All] ^ BB[Them][chess_P]) & attackedBy[Us][chess_P];
+
+	if (weak)
+	{
+		b = BB[Us][chess_P] & (~attackedBy[Them][chess_All]
+			| attackedBy[Us][chess_All]);
+		
+		//safeThreats = (shift<Right>(b) | shift<Left>(b)) & weak;
+		if(Us== WHITE_SIDE)
+			safeThreats = (b & 0x7F7F7F7F7F7F7F7FULL) >> 7 | (b & 0xFEFEFEFEFEFEFEFEULL) >> 9;
+		else
+			safeThreats = (b & 0x7F7F7F7F7F7F7F7FULL) << 7 | (b & 0xFEFEFEFEFEFEFEFEULL) << 9;
+
+		safeThreats &= weak;
+		score += ThreatBySafePawn * BitCount(safeThreats);
+	}
+
+	// Squares strongly protected by the opponent, either because they attack the
+	// square with a pawn, or because they attack the square twice and we don't.
+	stronglyProtected = attackedBy[Them][chess_P]
+		| (attackedBy2[Them] & ~attackedBy2[Us]);
+
+	// Non-pawn enemies, strongly protected
+	defended = (BB[Them][chess_All] ^ BB[Them][chess_P])
+		& stronglyProtected;
+
+	// Enemies not strongly protected and under our attack
+	weak = BB[Them][chess_All]
+		& ~stronglyProtected
+		&  attackedBy[Us][chess_All];
+
+	// Add a bonus according to the kind of attacking pieces
+	if (defended | weak)
+	{
+		b = (defended | weak) & (attackedBy[Us][chess_N] | attackedBy[Us][chess_B]);
+		while (b)
+		{
+			_Pos_ s = pop_lsb(b);
+			score += ThreatByMinor[chess_at(s) + 1];
+			if (chess_at(s) != chess_P)
+				score += ThreatByRank * (int)relative_rank(Them, s);
+		}
+
+		b = (BB[Them][chess_Q]| weak) & attackedBy[Us][chess_R];
+		while (b)
+		{
+			_Pos_ s = pop_lsb(b);
+			score += ThreatByRook[chess_at(s) + 1];
+			if (chess_at(s) != chess_P)
+				score += ThreatByRank * (int)relative_rank(Them, s);
+		}
+
+		score += Hanging * BitCount(weak & ~attackedBy[Them][chess_All]);
+
+		b = weak & attackedBy[Us][chess_K];
+		if (b)
+			score += ThreatByKing[bool(b & (b - 1))];
+		//            score += ThreatByKing[more_than_one(b)];
+	}
+
+	// Bonus for opponent unopposed weak pawns
+	//if (BB[Us][chess_R] | BB[Us][chess_Q])
+	//	score += WeakUnopposedPawn * pe->weak_unopposed(Them);
+
+	// Find squares where our pawns can push on the next move
+	if (Us == WHITE_SIDE)
+	{
+		b = (BB[Us][chess_P] >> 8) & ~(BB[Us][chess_All] | BB[Them][chess_All]);
+		b |= ((b & TRank3BB) >> 8) & ~(BB[Us][chess_All] | BB[Them][chess_All]);
+	}
+	else
+	{
+		b = (BB[Us][chess_P] << 8) & ~(BB[Us][chess_All] | BB[Them][chess_All]);
+		b |= ((b & TRank3BB) << 8) & ~(BB[Us][chess_All] | BB[Them][chess_All]);
+
+	}
+	// Keep only the squares which are not completely unsafe
+	b &= ~attackedBy[Them][chess_P]
+		& (attackedBy[Us][chess_All] | ~attackedBy[Them][chess_All]);
+
+	// Add a bonus for each new pawn threats from those squares
+	//b = (shift<Left>(b) | shift<Right>(b))
+	//	&  pos.pieces(Them)
+	//	& ~attackedBy[Us][PAWN];
+
+	if (Us == WHITE_SIDE)
+	{
+		b = (b & 0x7F7F7F7F7F7F7F7FULL) >> 7 | (b & 0xFEFEFEFEFEFEFEFEULL) >> 9;
+	}
+	else
+	{
+		b = (b & 0x7F7F7F7F7F7F7F7FULL) << 7 | (b & 0xFEFEFEFEFEFEFEFEULL) << 9;
+	}
+
+	b = b
+		& BB[Them][chess_All]
+		& ~attackedBy[Us][chess_P];
+
+	score += ThreatByPawnPush * BitCount(b);
+
+	// Add a bonus for safe slider attack threats on opponent queen
+	// 这个要加后的斜线方向的判断
+	//safeThreats = ~pos.pieces(Us) & ~attackedBy2[Them] & attackedBy2[Us];
+	//b = (attackedBy[Us][chess_B] & attackedBy[Them][QUEEN_DIAGONAL])
+	//	| (attackedBy[Us][chess_R] & attackedBy[Them][chess_Q] & ~attackedBy[Them][QUEEN_DIAGONAL]);
+
+	//score += ThreatByAttackOnQueen * BitCount(b & safeThreats);
+
+
+	return score;
 }
 
 

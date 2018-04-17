@@ -1,13 +1,2 @@
-﻿  Evaluation.cpp
-Evaluation.cpp(225): warning C4244: “+=”: 从“const _Score_”转换到“_Value_”，可能丢失数据
-Evaluation.cpp(235): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
-Evaluation.cpp(240): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
-Evaluation.cpp(276): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
-Evaluation.cpp(296): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
-Evaluation.cpp(319): warning C4244: “+=”: 从“const _Score_”转换到“_Value_”，可能丢失数据
-Evaluation.cpp(329): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
-Evaluation.cpp(334): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
-Evaluation.cpp(364): warning C4800: “BitBoard”: 将值强制为布尔值“true”或“false”(性能警告)
-Evaluation.cpp(375): warning C4334: “<<”: 32 位移位的结果被隐式转换为 64 位(是否希望进行 64 位移位?)
-  FlySky.vcxproj -> E:\Chess_AI\Debug\FlySky.exe
+﻿  FlySky.vcxproj -> E:\Chess_AI\Debug\FlySky.exe
   FlySky.vcxproj -> E:\Chess_AI\Debug\FlySky.pdb (Full PDB)

@@ -150,6 +150,7 @@ public:
 	void init_Eval();
 	void init_attackArea();
 	_Score_ evaluate_pieces();
+	_Score_ evaluate_threats(bool Us);
 	int init_phase(Phase & gamePhase, _Score_ * non_pawn_material);
 
 	_Value_ evaluation(const bool &side);
