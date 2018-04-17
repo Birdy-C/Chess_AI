@@ -191,7 +191,7 @@ _Score_  ChessBoard::evaluate_pieces() {
 	BitBoard b, bb;
 	_Score_ score = 0;
 	BitBoard OutpostRanks;
-	for (_ChessPattern_ pt = chess_B; pt <= chess_Q; ++pt)
+	for (_ChessPattern_ pt = chess_N; pt <= chess_Q; ++pt)
 	{
 		//attackAreaWhite[pt] = 0ULL;
 		//const Bitboard OutpostRanks = (Us == WHITE ? Rank4BB | Rank5BB | Rank6BB
@@ -201,10 +201,11 @@ _Score_  ChessBoard::evaluate_pieces() {
 		for (size_t pt_id = 0; pt_id < chess_count(WHITE_SIDE, pt); pt_id++)
 		{
 			//attackAreaWhite[pt] |= AttackRange[List[pt][pt_id]];
-			BitBoard s = 1 << List[pt][pt_id];
-			b = AttackRange[List[pt][pt_id]];
-			if (pinners(WHITE_SIDE) & s)
-				;			//b &= LineBB[pos.square<KING>(Us)][s];//这里省略了计算在被牵制线上的移动
+			_Pos_ pos = List[pt][pt_id];
+			BitBoard s = (BitBoard)1 << pos;
+			b = AttackRange[pos];
+			//if (pinners(WHITE_SIDE) & s)
+			//	;			//b &= LineBB[pos.square<KING>(Us)][s];//这里省略了计算在被牵制线上的移动
 
 			attackedBy2[WHITE_SIDE] |= attackAreaWhite[chess_All] & b;
 			attackAreaWhite[chess_All] |= attackAreaWhite[pt] |= b;
@@ -221,7 +222,7 @@ _Score_  ChessBoard::evaluate_pieces() {
 
 			int mob = BitCount(b & mobilityArea[WHITE_SIDE]);
 
-			mobility[WHITE_SIDE] += MobilityBonus[pt - 2][mob];
+			mobility[WHITE_SIDE] += MobilityBonus[pt][mob];
 
 			// Bonus for this piece as a king protector
 			//score += KingProtector[Pt - 2] * distance(s, pos.square<KING>(Us));
@@ -238,10 +239,9 @@ _Score_  ChessBoard::evaluate_pieces() {
 					if (bb)
 						score += Outpost[pt == chess_B][bool(attackAreaWhite[chess_P] & bb)];
 				}
-
 				// Bonus when behind a pawn
 				
-				if (List[pt][pt_id] >> 3 > 4
+				if (pos >> 3 > 4
 					&& (BB[WHITE_SIDE][chess_P] & (s << 8)))
 					score += MinorBehindPawn;
 
@@ -265,12 +265,12 @@ _Score_  ChessBoard::evaluate_pieces() {
 			{
 				// Bonus for aligning with enemy pawns on the same rank/file 和对方在同一条横/纵线上
 				BitBoard t;
-				t = FileABB << (List[pt][pt_id] & 7) | Rank1BB << (List[pt][pt_id] >> 3);
-				if (List[pt][pt_id] >> 3 <= 3)
-					score += RookOnPawn * BitCount(BB[BLACK_SIDE][chess_P] & (List[pt][pt_id]));
+				t = FileABB << (pos & 7) | Rank1BB << (pos >> 3);
+				if (pos >> 3 <= 3)
+					score += RookOnPawn * BitCount(BB[BLACK_SIDE][chess_P] & (pos));
 
 				// Bonus when on an open or semi-open file 在开放或半开放的路线上
-				t = Rank1BB << (List[pt][pt_id] >> 3);
+				t = Rank1BB << (pos >> 3);
 
 				if (t & BB[WHITE_SIDE][chess_P])
 					score += RookOnFile[bool(t&BB[BLACK_SIDE][chess_P])];
@@ -293,21 +293,22 @@ _Score_  ChessBoard::evaluate_pieces() {
 				// Penalty if any relative pin or discovered attack against the queen
 				// 这里需要计算queen的牵制
 				//Bitboard pinners;
-				if (pinners(WHITE_SIDE) & (1 << List[pt][pt_id]))	//		if (pos.slider_blockers(pos.pieces(Them, ROOK, BISHOP), s, pinners))
+				if (pinners(WHITE_SIDE) & (1 <<pos))	//		if (pos.slider_blockers(pos.pieces(Them, ROOK, BISHOP), s, pinners))
 					score -= WeakQueen;
 			}
 		}
 
 
-		//attackAreaBlack[pt] = 0ULL;
 		OutpostRanks = Rank4BB | Rank5BB | Rank6BB;
 
 		for (size_t pt_id = 0; pt_id < chess_count(BLACK_SIDE, pt); pt_id++)
 		{
-			BitBoard s = 1 << List[pt][pt_id];
-			b = AttackRange[List[pt][pt_id]];
-			if (pinners(BLACK_SIDE) & s)
-				;			//b &= LineBB[pos.square<KING>(Us)][s];//这里省略了计算在被牵制线上的移动
+			_Pos_ pos = List[pt | BLACK_CHESS_BIT][pt_id];
+
+			BitBoard s = (BitBoard)1 << pos;
+			b = AttackRange[pos];
+			//if (pinners(BLACK_SIDE) & s)
+			//	;			//b &= LineBB[pos.square<KING>(Us)][s];//这里省略了计算在被牵制线上的移动
 
 			attackedBy2[BLACK_SIDE] |= attackAreaBlack[chess_All] & b;
 			attackAreaBlack[chess_All] |= attackAreaBlack[pt] |= b;
@@ -315,7 +316,7 @@ _Score_  ChessBoard::evaluate_pieces() {
 
 			int mob = BitCount(b & mobilityArea[BLACK_SIDE]);
 
-			mobility[BLACK_SIDE] += MobilityBonus[pt - 2][mob];
+			mobility[BLACK_SIDE] += MobilityBonus[pt][mob];
 
 			// Bonus for this piece as a king protector
 			//score += KingProtector[Pt - 2] * distance(s, pos.square<KING>(Us));
@@ -323,7 +324,7 @@ _Score_  ChessBoard::evaluate_pieces() {
 			if (pt == chess_B || pt == chess_N)
 			{
 				// Bonus for outpost squares
-				bb = OutpostRanks & ~attackAreaBlack[chess_P];
+				bb = OutpostRanks & ~attackAreaWhite[chess_P];
 				if (bb & s)
 					score -= Outpost[pt == chess_B][bool(attackAreaBlack[chess_P] & s)] * 2;
 				else
@@ -335,8 +336,8 @@ _Score_  ChessBoard::evaluate_pieces() {
 
 				// Bonus when behind a pawn
 
-				if (List[pt][pt_id] >> 3 > 4
-					&& (BB[BLACK_SIDE][chess_P] & (s << 8)))
+				if (pos >> 3 < 3
+					&& (BB[BLACK_SIDE][chess_P] & (s >> 8)))
 					score -= MinorBehindPawn;
 
 				if (pt == chess_B)
@@ -352,15 +353,15 @@ _Score_  ChessBoard::evaluate_pieces() {
 			{
 				// Bonus for aligning with enemy pawns on the same rank/file 和对方在同一条横/纵线上
 				BitBoard t;
-				t = FileABB << (List[pt][pt_id] & 7) | Rank1BB << (List[pt][pt_id] >> 3);
-				if (List[pt][pt_id] >> 3 <= 3)
-					score -= RookOnPawn * BitCount(BB[BLACK_SIDE][chess_P] & (List[pt][pt_id]));
+				t = FileABB << (pos & 7) | Rank1BB << (pos >> 3);
+				if (pos >> 3 <= 3)
+					score -= RookOnPawn * BitCount(BB[WHITE_SIDE][chess_P] & pos);
 
 				// Bonus when on an open or semi-open file 在开放或半开放的路线上
-				t = Rank1BB << (List[pt][pt_id] >> 3);
+				t = Rank1BB << (pos >> 3);
 
 				if (t & BB[BLACK_SIDE][chess_P])
-					score -= RookOnFile[bool(t&BB[BLACK_SIDE][chess_P])];
+					score -= RookOnFile[bool(t & BB[WHITE_SIDE][chess_P])];
 
 				// Penalty when trapped by the king, even more if the king cannot castle
 
@@ -371,7 +372,7 @@ _Score_  ChessBoard::evaluate_pieces() {
 			}
 			if (pt == chess_Q)
 			{
-				if (pinners(BLACK_SIDE) & (1 << List[pt][pt_id]))	//		if (pos.slider_blockers(pos.pieces(Them, ROOK, BISHOP), s, pinners))
+				if (pinners(BLACK_SIDE) & (1 << pos))	//		if (pos.slider_blockers(pos.pieces(Them, ROOK, BISHOP), s, pinners))
 					score += WeakQueen;
 			}
 		}
