@@ -20,7 +20,7 @@ enum GenType
 enum
 {
 	MAIN_MOVE = 0, PROMOTION_INIT = 1, PROMOTION = 2, CAPTURE_INIT = 3, GOOD_CAPTURE = 4, QUIET_INIT = 5, QUIETS = 6, BAD_CAPTURE = 7,
-	RID_CHECK_INIT = 8, RID_CHECK = 9, RID_DOU_CHECK_INIT = 10, RID_DOU_CHECK = 11
+	RID_CHECK_INIT = 8, RID_CHECK = 9, RID_DOU_CHECK_INIT = 10, RID_DOU_CHECK = 11, QSEARCH_INIT = 12, QSEARCH = 13
 };
 
 class ChessBoard;
@@ -64,7 +64,7 @@ typedef struct ExtMovement
 class MoveGenerator
 {
 private:
-	const ChessBoard &Board;
+	ChessBoard &Board;
 
 	int	state;
 	bool side;
@@ -80,7 +80,7 @@ private:
 	ExtMove* Search_RidDoubleCheck(ExtMove* move_List) const;
 
 public:
-	MoveGenerator(const ChessBoard &Bd, const Movement tt_move, const bool sd, const _Depth_ dpt = MAX_DEPTH);
+	MoveGenerator(ChessBoard &Bd, const Movement tt_move, const bool sd, const _Depth_ dpt = MAX_DEPTH, const bool qsearch = false);
 
 	Movement next_move();
 	int get_state() const{ return state; }

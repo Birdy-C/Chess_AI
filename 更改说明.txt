@@ -1,0 +1,22 @@
+RookOnFile的开放半开放分别是什么意思？
+Imbalance函数合并了Black和White的计算
+Imbalance中将CountBit函数更改为查表chess_count函数
+修复Pawn.cpp ChessBoard::pawn_evaluate()中的BitBoard choosenPawn类型改为_Pos_ choosenPawn
+修复Pawn.cpp opposed的计算错误BUG
+修复Pawn.cpp neighbour的计算BUG，get_rank、get_file函数的传参误用
+修复Pawn.cpp中get_rank和get_file用反的情况
+将pawn_evaluate中的_Value_ score改为_Score_ score
+修复psq初始化中的错误，将rank_of(s)改为7-rank_of(s)
+修复make_score函数的重大错误
+修复value_Pawn()函数中错误的调用make_score
+
+
+
+宣传部-楼震宇 2018/5/3 14:49:23
+按s可以保存到现在为止的所有棋步到record.txt
+
+宣传部-楼震宇 2018/5/3 14:49:38
+然后main函数里有一句load可以读取 这个用来调试很方便
+
+宣传部-楼震宇 2018/5/3 14:49:56
+然后控制一下按P的功能 注释上半或者下半

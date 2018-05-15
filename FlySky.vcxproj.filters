@@ -63,14 +63,14 @@
     <ClCompile Include="MoveTable.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="material.cpp">
-      <Filter>头文件</Filter>
+    <ClCompile Include="Pawn.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="Imbalance.cpp">
-      <Filter>头文件</Filter>
+      <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="Pawn.cpp">
-      <Filter>头文件</Filter>
+    <ClCompile Include="material.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -101,10 +101,10 @@
     <ClInclude Include="Search.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="Evaluation.h">
-      <Filter>源文件</Filter>
-    </ClInclude>
     <ClInclude Include="Pawn.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="Evaluation.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

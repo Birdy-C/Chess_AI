@@ -240,15 +240,10 @@ void ChessBoard::DEBUG_PRINT_EXPAND(const bool &side)
 bool ChessBoard::operator==(ChessBoard& pBoard)
 {
 	if (pBoard.flag != flag)
-	{
 		return false;
-	}
 
-	for (_ChessPattern_ pattern = chess_P; pattern <= chess_All; pattern++)
-	{
-		if (pBoard.BB[WHITE_SIDE][pattern] != BB[WHITE_SIDE][pattern] || pBoard.BB[BLACK_SIDE][pattern] != BB[BLACK_SIDE][pattern])
-			return false;
-	}
+	if (pBoard.All != All)
+		return false;
 
 	for (_Pos_ p = 0; p < SQ_COUNT; p++)
 	{

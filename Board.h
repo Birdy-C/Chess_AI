@@ -103,6 +103,7 @@ public:
 	void Move(const _Pos_ orig, const _Pos_ dest);
 	void Eaten(const _Pos_ pos);
 	void Place(const _Pos_ pos, const _ChessType_ tp);
+	void BitmapUpdate(const _Pos_ pos);
 
 	//attack information function
 	inline BitBoard _attack_wp(const _Pos_ &p) const;
@@ -129,7 +130,7 @@ public:
 
 	//search tree
 	Movement IterativeDeepening(const bool &side, const uint16_t &step);
-	template<bool PvNode> _Value_ AlphaBeta(const _Depth_ &depth, const _Depth_ &depth_limit, const bool &side, _Value_ alpha, _Value_ beta);
+	template<bool PvNode> _Value_ AlphaBeta(const _Depth_ &depth, const _Depth_ &depth_limit, _Value_ alpha, _Value_ beta);
 	void DEBUG_PRINT_EXPAND(const bool &side);
 
 	//check-test
@@ -153,7 +154,8 @@ public:
 	_Score_ evaluate_threats(bool Us);
 	int init_phase(Phase & gamePhase, _Score_ * non_pawn_material);
 
-	_Value_ evaluation(const bool &side);
+	_Value_ evaluation(const bool & curSide, bool test_mode);
+	//_Value_ evaluation(const bool &curSide);
 	_Score_ value_Material();
 	_Score_ value_Space(BitBoard * attackAreaWhite, BitBoard * attackAreaBlack);
 	//_Score_ value_Mobility();
@@ -165,6 +167,11 @@ public:
 	//_Value_ value_Pieces();
 	//template<Color Us, PieceType Pt>
 	//_Value_ evaluate_pieces();
+
+	bool ChessBoard::see_ge(const Movement m, _Value_ threshold);
+	_ChessPattern_ min_attacker(_ChessPattern_ Pt, const BitBoard* bb, _Pos_ to, BitBoard stmAttackers, _Pos_& from, BitBoard& attackers);
+	_Value_ QSearch(_Value_ alpha, _Value_ beta, Movement ttMove, _Depth_ d);
+
 };
 
 class PVLine

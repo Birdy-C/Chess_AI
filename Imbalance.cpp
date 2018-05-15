@@ -1,28 +1,37 @@
 #include "Evaluation.h"
-/*这个函数中还缺一个对残局的判断*/
-const int PIECE_TYPE_NB = 8;
 
-const int QuadraticOurs[][PIECE_TYPE_NB] = {
+/*这个函数中还缺一个对残局的判断*/
+static const int PIECE_TYPE_NB = 8;
+static const int Bishop_pair   = 0;
+static const int Pawn		   = 1;
+static const int Knight		   = 2;
+static const int Bishop		   = 3;
+static const int Rook		   = 4;
+static const int Queen		   = 5;
+
+static const int QuadraticOurs[][PIECE_TYPE_NB] = {
 	//            OUR PIECES
 	// pair pawn knight bishop rook queen
 	{ 1667 }, // Bishop pair
-	{ 40,    0 }, // Pawn
-	{ 32,  255,  -3 }, // Knight      OUR PIECES
-	{ 0,  104,   4,    0 }, // Bishop
-	{ -26,   -2,  47,   105,  -149 }, // Rook
-	{ -189,   24, 117,   133,  -134, -10 }  // Queen
+	{   40,    0 }, // Pawn
+	{   32,  255,  -3 }, // Knight      OUR PIECES
+	{    0,  104,   4,   0 }, // Bishop
+	{  -26,   -2,  47, 105, -149 }, // Rook
+	{ -189,   24, 117, 133, -134, -10 }  // Queen
 };
 
-const int QuadraticTheirs[][PIECE_TYPE_NB] = {
+static const int QuadraticTheirs[][PIECE_TYPE_NB] = {
 	//           THEIR PIECES
 	// pair pawn knight bishop rook queen
-	{ 0 }, // Bishop pair
-	{ 36,    0 }, // Pawn
-	{ 9,   63,   0 }, // Knight      OUR PIECES
-	{ 59,   65,  42,     0 }, // Bishop
-	{ 46,   39,  24,   -24,    0 }, // Rook
-	{ 97,  100, -42,   137,  268,    0 }  // Queen
+	{  0 }, // Bishop pair
+	{ 36,   0 }, // Pawn
+	{  9,  63,   0 }, // Knight      OUR PIECES
+	{ 59,  65,  42,   0 }, // Bishop
+	{ 46,  39,  24, -24,   0 }, // Rook
+	{ 97, 100, -42, 137, 268,  0 }  // Queen
 };
+
+
 /*
 // Endgame evaluation and scaling functions are accessed directly and not through
 // the function maps because they correspond to more than one material hash key.
@@ -53,31 +62,39 @@ bool is_KQKRPs(const Position& pos, Color us) {
 		&& pos.count<PAWN>(~us) >= 1;
 }
 */
-/// imbalance() calculates the imbalance by comparing the piece count of each
-/// piece type for both colors.
-template<bool Us>
-_Value_ imbalance(const int pieceCount[][PIECE_TYPE_NB]) {
-
-	const bool Them = (Us == WHITE_SIDE ? BLACK_SIDE : WHITE_SIDE);
-
-	int bonus = 0;
-
+// imbalance() calculates the imbalance by comparing the piece count of each
+// piece type for both colors.
+static _Value_ imbalance(const int pieceCount[][PIECE_TYPE_NB]) 
+{
 	// Second-degree polynomial material imbalance, by Tord Romstad
-	for (int pt1 = 0; pt1 <= 5; ++pt1)
+
+	int bonus = (pieceCount[WHITE_SIDE][Bishop_pair] - pieceCount[BLACK_SIDE][Bishop_pair]) * QuadraticOurs[Bishop_pair][Bishop_pair];
+
+	for (int pt1 = Pawn; pt1 <= Queen; ++pt1)
 	{
-		if (!pieceCount[Us][pt1])
-			continue;
+		if (pieceCount[WHITE_SIDE][pt1])
+		{
+			int v = 0;
+			for (int pt2 = 0; pt2 <= pt1; ++pt2)
+				v += QuadraticOurs[pt1][pt2] * pieceCount[WHITE_SIDE][pt2]
+				+ QuadraticTheirs[pt1][pt2] * pieceCount[BLACK_SIDE][pt2];
 
-		int v = 0;
+			bonus += pieceCount[WHITE_SIDE][pt1] * v;
+		}
+		if (pieceCount[BLACK_SIDE][pt1])
+		{
+			int v = 0;
+			for (int pt2 = 0; pt2 <= pt1; ++pt2)
+				v += QuadraticOurs[pt1][pt2] * pieceCount[BLACK_SIDE][pt2]
+				+ QuadraticTheirs[pt1][pt2] * pieceCount[WHITE_SIDE][pt2];
 
-		for (int pt2 = 0; pt2 <= pt1; ++pt2)
-			v += QuadraticOurs[pt1][pt2] * pieceCount[Us][pt2]
-			+ QuadraticTheirs[pt1][pt2] * pieceCount[Them][pt2];
-
-		bonus += pieceCount[Us][pt1] * v;
+			bonus -= pieceCount[BLACK_SIDE][pt1] * v;
+		}
 	}
 
-	return bonus;
+	assert(bonus < 65536 && bonus > -65536);
+
+	return (_Value_)bonus;
 }
 
  // namespace
@@ -88,8 +105,8 @@ _Value_ imbalance(const int pieceCount[][PIECE_TYPE_NB]) {
 	/// is found. Otherwise a new Entry is computed and stored there, so we don't
 	/// have to recompute all when the same material configuration occurs again.
 
-_Score_ ChessBoard::value_Imbalance() {
-
+_Score_ ChessBoard::value_Imbalance() 
+{
 	/*
 		Value npm_w = pos.non_pawn_material(WHITE);
 		Value npm_b = pos.non_pawn_material(BLACK);
@@ -146,12 +163,18 @@ _Score_ ChessBoard::value_Imbalance() {
 		// Evaluate the material imbalance. We use PIECE_TYPE_NONE as a place holder
 		// for the bishop pair "extended piece", which allows us to be more flexible
 		// in defining bishop pair bonuses.
-	const int PieceCount[_SIDE_COUNT_][PIECE_TYPE_NB] = {
-		{ BitCount(BB[WHITE_SIDE][chess_B]) > 1, BitCount(BB[WHITE_SIDE][chess_P]),BitCount(BB[WHITE_SIDE][chess_N]),
-		BitCount(BB[WHITE_SIDE][chess_B])    , BitCount(BB[WHITE_SIDE][chess_R]),BitCount(BB[WHITE_SIDE][chess_Q]) },
-		{ BitCount(BB[BLACK_SIDE][chess_B]) > 1, BitCount(BB[BLACK_SIDE][chess_P]),BitCount(BB[BLACK_SIDE][chess_N]),
-		BitCount(BB[BLACK_SIDE][chess_B])    , BitCount(BB[BLACK_SIDE][chess_R]),BitCount(BB[BLACK_SIDE][chess_Q]) } };
+	const int PieceCount[_SIDE_COUNT_][PIECE_TYPE_NB] = 
+	{
+		{ 
+			chess_count(WHITE_SIDE, chess_B) > 1, chess_count(WHITE_SIDE, chess_P), chess_count(WHITE_SIDE, chess_N),
+			chess_count(WHITE_SIDE, chess_B),	  chess_count(WHITE_SIDE, chess_R), chess_count(WHITE_SIDE, chess_Q)
+		},
+		{
+			chess_count(BLACK_SIDE, chess_B) > 1, chess_count(BLACK_SIDE, chess_P), chess_count(BLACK_SIDE, chess_N),
+			chess_count(BLACK_SIDE, chess_B),	  chess_count(BLACK_SIDE, chess_R), chess_count(BLACK_SIDE, chess_Q)
+		},
+	};
 
-	int value = int16_t((imbalance<WHITE_SIDE>(PieceCount) - imbalance<BLACK_SIDE>(PieceCount)) / 16);
+	int value = (imbalance(PieceCount) >> 4);
 	return make_score(value, value);
-	}
+}

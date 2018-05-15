@@ -1,0 +1,137 @@
+//==========================================
+// min_attacker() is a helper function used by see_ge() to locate the least
+// valuable attacker for the side to move, remove the attacker we just found
+// from the bitboards and scan for new X-ray attacks behind it.
+
+
+int min_attacker(int Pt ,const BitBoard* bb, _Pos_ to, BitBoard stmAttackers,
+	BitBoard& occupied, BitBoard& attackers) {
+
+	if (chess_K == Pt)
+		return chess_K;
+
+	BitBoard b = stmAttackers & bb[Pt];
+	if (!b)
+		return min_attacker(Pt + 1, bb, to, stmAttackers, occupied, attackers);
+
+	// 移掉这个棋子
+	occupied ^= b & ~(b - 1);
+
+	// 更新attackers
+	if (Pt == chess_P || Pt == chess_B || Pt == chess_Q)
+		attackers |= attacks_bb<chess_B>(to, occupied) & (bb[chess_B] | bb[chess_Q]);
+
+	if (Pt == chess_R || Pt == chess_Q)
+		attackers |= attacks_bb<chess_R>(to, occupied) & (bb[chess_R] | bb[chess_Q]);
+
+	attackers &= occupied; // After X-ray that may add already processed pieces
+	return Pt;
+}
+
+
+
+
+_Score_ PieceValueMG[WHITE_All] = { 171, 764, 826, 1282, 2513, 20000 };
+
+/// Position::see_ge (Static Exchange Evaluation Greater or Equal) tests if the
+/// SEE value of move is greater or equal to the given threshold. We'll use an
+/// algorithm similar to alpha-beta pruning with a null window.
+bool ChessBoard::see_ge(const Movement m, _Value_ threshold) const {
+
+	//assert(is_ok(m));
+	bool Us = side_toMove();
+
+	// Only deal with normal moves, assume others pass a simple see
+	if (m.Get_move_type() != MOVE_NORMAL)
+		return 0 >= threshold;
+
+	//Square from = from_sq(m), to = to_sq(m);
+	_Pos_ from = m.Get_orig_pos(), to = m.Get_dest_pos();
+
+	//PieceType nextVictim = type_of(piece_on(from));
+	int nextVictim = chess_at(from) & CHESS_PATTERN;
+
+	//Color stm = ~color_of(piece_on(from)); // First consider opponent's move
+	bool stm = chess_at(from) & BLACK_CHESS_BIT ? WHITE_SIDE: BLACK_SIDE;
+	_Value_ balance; // Values of the pieces taken by us minus opponent's ones
+	BitBoard occupied, stmAttackers;
+
+	// The opponent may be able to recapture so this is the best result
+	// we can hope for.
+	//balance = PieceValue[MG][piece_on(to)] - threshold;
+	balance = PieceValueMG[chess_at(to) & CHESS_PATTERN] - threshold;
+
+	if (balance < 0)
+		return false;
+
+	// Now assume the worst possible result: that the opponent can
+	// capture our piece for free.
+	balance -= PieceValueMG[nextVictim];
+
+	if (balance >= 0) // Always true if nextVictim == KING
+		return true;
+
+	bool opponentToMove = true;
+	occupied = get_bb_all() ^ from ^ to;
+
+	// Find all attackers to the destination square, with the moving piece removed,
+	// but possibly an X-ray attacker added behind it.
+	//Bitboard attackers = attackers_to(to, occupied) & occupied;
+	BitBoard attackers = (My_attackers_to(to)|| His_attackers_to(to)) & occupied;
+
+	while (true)
+	{
+		// The balance is negative only because we assumed we could win
+		// the last piece for free. We are truly winning only if we can
+		// win the last piece _cheaply enough_. Test if we can actually
+		// do this otherwise "give up".
+		assert(balance < 0);
+
+		//stmAttackers = attackers & pieces(stm);
+		stmAttackers == attackers & get_bb(stm, chess_All);
+
+		// Don't allow pinned pieces to attack pieces except the king as long all
+		// pinners are on their original square.
+		// 这个我不会写了……
+		
+		//if (!(st->pinnersForKing[stm] & ~occupied))
+		//	stmAttackers &= ~st->blockersForKing[stm];
+		if (!(pinners(stm)& ~occupied))
+			;//	stmAttackers &= ~st->blockersForKing[stm];
+
+
+		// If we have no more attackers we must give up
+		if (!stmAttackers)
+			break;
+
+		// Locate and remove the next least valuable attacker
+		nextVictim = min_attacker(chess_P, BB[stm], to, stmAttackers, occupied, attackers);
+
+		if (nextVictim == chess_K)
+		{
+			// Our only attacker is the king. If the opponent still has
+			// attackers we must give up. Otherwise we make the move and
+			// (having no more attackers) the opponent must give up.
+			if (!(attackers &get_bb(~stm, chess_All)))
+				opponentToMove = !opponentToMove;
+			break;
+		}
+
+		// Assume the opponent can win the next piece for free and switch sides
+		balance += PieceValueMG[nextVictim];
+		opponentToMove = !opponentToMove;
+
+		// If balance is negative after receiving a free piece then give up
+		if (balance < 0)
+			break;
+
+		// Complete the process of switching sides. The first line swaps
+		// all negative numbers with non-negative numbers. The compiler
+		// probably knows that it is just the bitwise negation ~balance.
+		balance = -balance - 1;
+		stm = ~stm;
+	}
+
+	// If the opponent gave up we win, otherwise we lose.
+	return opponentToMove;
+}

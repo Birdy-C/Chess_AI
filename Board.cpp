@@ -78,20 +78,6 @@ void ChessBoard::Reset()
 	AttackRange[SQ_C8] = (this->*attack_area[chess_B])(SQ_C8); AttackRange[SQ_F8] = (this->*attack_area[chess_B])(SQ_F8);
 	AttackRange[SQ_D8] = (this->*attack_area[chess_Q])(SQ_D8); AttackRange[SQ_E8] = (this->*attack_area[chess_K])(SQ_E8);
 
-	/*
-	Range_by_Piece[WHITE_SIDE][chess_P] = 0x0000FF0000000000ULL;
-	Range_by_Piece[WHITE_SIDE][chess_N] = AttackRange[SQ_B1] | AttackRange[SQ_G1];
-	Range_by_Piece[WHITE_SIDE][chess_B] = AttackRange[SQ_C1] | AttackRange[SQ_F1];
-	Range_by_Piece[WHITE_SIDE][chess_R] = AttackRange[SQ_A1] | AttackRange[SQ_H1];
-	Range_by_Piece[WHITE_SIDE][chess_Q] = AttackRange[SQ_D1];
-	Range_by_Piece[WHITE_SIDE][chess_K] = AttackRange[SQ_E1];
-	Range_by_Piece[WHITE_SIDE][chess_P] = 0x0000000000FF0000ULL;
-	Range_by_Piece[WHITE_SIDE][chess_N] = AttackRange[SQ_B8] | AttackRange[SQ_G8];
-	Range_by_Piece[WHITE_SIDE][chess_B] = AttackRange[SQ_C8] | AttackRange[SQ_F8];
-	Range_by_Piece[WHITE_SIDE][chess_R] = AttackRange[SQ_A8] | AttackRange[SQ_H8];
-	Range_by_Piece[WHITE_SIDE][chess_Q] = AttackRange[SQ_D8];
-	Range_by_Piece[WHITE_SIDE][chess_K] = AttackRange[SQ_E8];*/
-
 	memset(List, SQ_NONE, sizeof(_Pos_) * PIECE_NUM * MAX_COUNT_PER_PATTERN);
 	for (size_t ct = 0; ct < 8; ct++)
 		List[WHITE_P][ct] = (_Pos_)(SQ_A2 + ct);
@@ -380,6 +366,14 @@ void ChessBoard::Place(const _Pos_ pos, const _ChessType_ tp)
 	index_InList[pos] = inc_chess_count(tp);
 
 	update_zobrist(zobrist[tp][pos]);
+}
+
+void ChessBoard::BitmapUpdate(const _Pos_ pos)
+{
+	Update(All, pos);
+	Update(All_trans, trans_map[pos]);
+	Update(All_L45, r45L_map[pos]);
+	Update(All_R45, r45R_map[pos]);
 }
 
 void ChessBoard::Set_atk_area(const _Pos_ &p)

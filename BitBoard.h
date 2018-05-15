@@ -38,6 +38,11 @@ enum
 
 enum
 {
+	FILE_A = 0, FILE_B = 1, FILE_C = 2, FILE_D = 3, FILE_E = 4, FILE_F = 5, FILE_G = 6, FILE_H = 7
+};
+
+enum
+{
 	SQ_A8 =  0, SQ_B8 =  1, SQ_C8 =  2, SQ_D8 =  3, SQ_E8 =  4, SQ_F8 =  5, SQ_G8 =  6, SQ_H8 =  7,
 	SQ_A7 =  8, SQ_B7 =  9, SQ_C7 = 10, SQ_D7 = 11, SQ_E7 = 12, SQ_F7 = 13, SQ_G7 = 14, SQ_H7 = 15,
 	SQ_A6 = 16, SQ_B6 = 17, SQ_C6 = 18, SQ_D6 = 19, SQ_E6 = 20, SQ_F6 = 21, SQ_G6 = 22, SQ_H6 = 23,
@@ -91,7 +96,7 @@ inline _Coordinate_ rank_of(const _Pos_ &p)
 
 inline _Coordinate_ relative_rank_of(const bool &side, const _Pos_ &p)
 {
-	return rank_of(p) ^ (side * 7);
+	return side == WHITE_SIDE ? 7 - rank_of(p) : rank_of(p);
 }
 
 inline _Coordinate_ file_of(const _Pos_ &p)
@@ -109,9 +114,19 @@ inline _ChessPattern_ pattern_of(const _ChessType_ &tp)
 	return tp & CHESS_PATTERN;
 }
 
+inline BitBoard get_rank(const _Coordinate_ &rank)
+{
+	return ((BitBoard)0xFF) << (rank << 3);
+}
+
 inline BitBoard get_rank(const BitBoard &b, const _Coordinate_ &rank)
 {
-	return (b >> (rank << 3)) & 0xFF;
+	return b & (((BitBoard)0xFF) << (rank << 3));
+}
+
+inline BitBoard get_file(const _Coordinate_ &file)
+{
+	return ((BitBoard)0x0101010101010101) << file;
 }
 
 inline BitBoard get_file(const BitBoard &b, const _Coordinate_ &file)
@@ -119,7 +134,7 @@ inline BitBoard get_file(const BitBoard &b, const _Coordinate_ &file)
 	return b & (((BitBoard)0x0101010101010101) << file);
 }
 
-inline BitBoard push_line(const bool &side)				//推进线，对方领地的第一行，对拜访来说是第五行
+inline BitBoard push_line(const bool &side)				//推进线，对方领地的第一行，对白方来说是第五行
 {
 	return (BitBoard)0x00000000FF000000 << (side * 8);
 }
@@ -142,6 +157,11 @@ inline bool in_promotion_line(const bool &side, const _Pos_ &p)
 inline BitBoard forward(const BitBoard &b, const bool &side)
 {
 	return side ? (b << 8) : (b >> 8);
+}
+
+inline BitBoard backward(const BitBoard &b, const bool &side)
+{
+	return side ? (b >> 8) : (b << 8);
 }
 
 inline _Pos_ forward(const _Pos_ &p, const bool &side)

@@ -7,7 +7,8 @@
 
 extern HashTable Hash_Table;						//哈希表类
 
-extern const _Value_ Contempt;				//藐视因子
+extern const _Value_ Contempt;						//藐视因子
+extern const _Value_ VALUE_UNKOWN;
 static uint16_t StepCount;
 
 StateInfo st_inf[MAX_DEPTH + 1];
@@ -30,17 +31,17 @@ Movement ChessBoard::IterativeDeepening(const bool &side, const uint16_t &step)
 	{
 		attempt = 1;
 		if (depth == BASIC_SEARCH_DEPTH)
-			val = AlphaBeta<PV>(0, depth, side, alpha, beta);
+			val = AlphaBeta<PV>(0, depth, alpha, beta);
 		else
 		{
-			delta = 50;
+			delta = 80;
 			FailLow = FailHigh = false;
 			alpha = val - delta;
 			beta = val + delta;
 			while (true)
 			{
 				std::cout << "Alpha = " << alpha << "\tBeta = " << beta << std::endl;
-				val = AlphaBeta<PV>(0, depth, side, alpha, beta);
+				val = AlphaBeta<PV>(0, depth, alpha, beta);
 				if (val < alpha && !FailHigh)
 				{
 					alpha = max(val - delta, -VALUE_INF);
@@ -56,7 +57,7 @@ Movement ChessBoard::IterativeDeepening(const bool &side, const uint16_t &step)
 				else
 					break;
 
-				delta += ((delta >> 2) + 15);
+				delta += ((delta >> 2) + 24);
 				attempt++;
 			}
 		}
@@ -75,22 +76,24 @@ Movement ChessBoard::IterativeDeepening(const bool &side, const uint16_t &step)
 
 //函数简介：搜索树核心函数，depth为当前已搜索至第几层，调用时应该指定depth为0；depth_limit为搜索层数限制；alpha与beta为当前节点的alpha与beta值
 template<bool PvNode>
-_Value_ ChessBoard::AlphaBeta(const _Depth_ &depth, const _Depth_ &depth_limit, const bool &side, _Value_ alpha, _Value_ beta)
+_Value_ ChessBoard::AlphaBeta(const _Depth_ &depth, const _Depth_ &depth_limit, _Value_ alpha, _Value_ beta)
 {
 	_Value_ val;
 	Movement tt_Move;
 
 	node_count++;
-
-	if ((val = Hash_Table.Probe_HashTable(get_zobrist(), depth_limit - depth, alpha, beta, tt_Move)) != VALUE_UNKNOWN)
-	{
-		hit_count++;
-		return val;
-	}
+	
+	//if ((val = Hash_Table.Probe_HashTable(get_zobrist(), depth_limit - depth, alpha, beta, tt_Move)) != VALUE_UNKNOWN)
+		//return val;
+	
 	if (depth_limit == depth)																//搜索到达叶节点
 	{
-		val = evaluation(0 == (depth & 1));
-		//Hash_Table.Record_HashTable(zobrist_value, 0, val, HASH_EVALUATE | StepCount, NONE);
+		//ChessBoard temp = *this;
+		//*this = temp;
+
+		//val = QSearch(alpha, beta, tt_Move, depth);
+		val = evaluation(side, false);
+		Hash_Table.Record_HashTable(get_zobrist(), 0, val, HASH_EVALUATE | StepCount, NONE);
 		return val;
 	}
 	
@@ -117,11 +120,19 @@ _Value_ ChessBoard::AlphaBeta(const _Depth_ &depth, const _Depth_ &depth_limit, 
 		if (chess_count(chess_K) != 1 || chess_count(chess_K | BLACK_CHESS_BIT) != 1)
 			assert(false);
 
-		//利用零宽度窗口递归，断言没有节点会优于PV，当零宽度窗口搜索失败时重新进行常规搜索
-		val = -AlphaBeta<NonPV>(depth + 1, depth_limit, !side, -alpha - 1, -alpha);
+		ChessBoard temp = *this;
 
-		if (PvNode || val > alpha && depth_limit - depth > 1 && branch_count == 1)
-			val = -AlphaBeta<PV>(depth + 1, depth_limit, !side, -beta, -alpha);
+		//利用零宽度窗口递归，断言没有节点会优于PV，当零宽度窗口搜索失败时重新进行常规搜索
+		val = -AlphaBeta<NonPV>(depth + 1, depth_limit, -alpha - 1, -alpha);
+
+		if (!(temp == *this))
+		{
+			*this = temp;
+			assert(false);
+		}
+
+		if (PvNode && val > alpha && depth_limit - depth > 1)
+			val = -AlphaBeta<PV>(depth + 1, depth_limit, -beta, -alpha);
 
 		undo_MoveChess(new_Move, depth);
 
@@ -194,7 +205,8 @@ void HashTable::Record_HashTable(const Zobrist &zobrist, const _Depth_ &depth, c
 			return;
 	}
 	//不同Zobrist键值的盘面在同一个入口发生冲突，PV节点拥有4层的优先权
-	else if (target->Get_depth() + (target->Get_flag() & HASH_STEP_CT) + ((target->Get_flag() >> 15) << 2) > depth + (flag & HASH_STEP_CT) + ((flag >> 15) << 2))
+	else if (target->Get_depth() + (target->Get_flag() & HASH_STEP_CT) + ((target->Get_flag() >> 15) << 2) > 
+		depth + (flag & HASH_STEP_CT) + ((flag >> 15) << 2))
 		return;	
 
 	target->Set_zobrist(zobrist);
@@ -221,3 +233,25 @@ void PVLine::Get_PVLine(ChessBoard Board, bool side)
 		target = Hash_Table.Get_HashNode(temp.get_zobrist().low_32);
 	}
 }
+
+/*
+_Value_ ChessBoard::QuietSearch(_Value_ alpha, _Value_ beta)
+{
+	MoveGenerator MoveGen;
+	Movement new_Move;
+	_Value_ val, current = VALUE_UNKNOWN;
+	while ((new_Move = MoveGen.next_move()) != MOVE_NONE)
+	{
+		if (inCheck() || see(new_Move))
+		{
+			MoveChess(new_Move);
+			val = -QuietSearch(-beta, -alpha);
+			UndoMoveChess(new_Move);
+			if (val > alpha)
+				current = alpha = val;
+			if (val >= beta)
+				return val;
+		}
+	}
+	return current == VALUE_UNKNOWN ? evaluate(side, false) : current;
+}*/

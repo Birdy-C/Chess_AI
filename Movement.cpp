@@ -4,21 +4,26 @@
 #include "Search.h"
 
 
-MoveGenerator::MoveGenerator(const ChessBoard &Bd, const Movement tt_move, const bool sd, const _Depth_ dpt)
+MoveGenerator::MoveGenerator(ChessBoard &Bd, const Movement tt_move, const bool sd, const _Depth_ dpt, const bool qsearch)
 	: Board(Bd), side(sd), depth(dpt), tt_Move(tt_move)
 {
 	end = cur = bad_cap = st_inf[dpt].mvtb;
 
-	switch (Board.DeltaCheck(side, check_pos, check_tp))
+	if (qsearch)
+		state = QSEARCH_INIT;
+	else
 	{
-	case 0:
-		state = MAIN_MOVE; break;
-	case 1:
-		state = RID_CHECK_INIT; break;
-	case 2:
-		state = RID_DOU_CHECK_INIT; break;
-	default:
-		assert(false);
+		switch (Board.DeltaCheck(side, check_pos, check_tp))
+		{
+		case 0:
+			state = MAIN_MOVE; break;
+		case 1:
+			state = RID_CHECK_INIT; break;
+		case 2:
+			state = RID_DOU_CHECK_INIT; break;
+		default:
+			assert(false);
+		}
 	}
 }
 
@@ -59,7 +64,14 @@ Movement MoveGenerator::next_move()
 	case CAPTURE_INIT:
 		end = expand<GEN_CAPTURE>(cur, Board);
 		score_cap();
-		++state;
+		if (CAPTURE_INIT == state)
+			++state;
+		else
+		{
+			state = QSEARCH;
+			if (tt_Move.Exist())
+				return tt_Move;
+		}		
 
 	case GOOD_CAPTURE:
         while (cur < end)
@@ -67,7 +79,7 @@ Movement MoveGenerator::next_move()
 			new_Move = pick_best(cur++, end);
 			if (new_Move.move != tt_Move)
 			{
-				if (0 <= new_Move.scr)
+				if (Board.see_ge(new_Move.move, 0))
 					return new_Move.move;
 
 				*bad_cap++ = new_Move;
@@ -121,6 +133,22 @@ Movement MoveGenerator::next_move()
 		{
 			new_Move = *cur++;
 			if (new_Move.move != tt_Move)
+				return new_Move.move;
+		}
+		break;
+
+	case QSEARCH_INIT:
+		end = expand<GEN_CAPTURE>(cur, Board);
+		score_cap();
+		++state;
+		if (tt_Move.Exist())
+			return tt_Move;
+
+	case QSEARCH:
+		while (cur < end)
+		{
+			new_Move = *cur++;
+			if (Board.see_ge(new_Move.move, 0) && new_Move.move != tt_Move)
 				return new_Move.move;
 		}
 		break;

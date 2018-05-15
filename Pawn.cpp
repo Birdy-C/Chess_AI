@@ -1,23 +1,25 @@
 #include "Pawn.h"
+#include "BitBoard.h"
+
 //
 #define V int
 #define S(mg, eg) make_score(mg, eg)
 
 // Isolated pawn penalty
-const _Score_ Isolated = S(13, 18);
+static const _Score_ Isolated = S(13, 18);
 
 // Backward pawn penalty
-const _Score_ Backward = S(24, 12);
+static const _Score_ Backward = S(24, 12);
 
 // Connected pawn bonus by opposed, phalanx, #support and rank
-_Score_ Connected[2][2][3][8];
+static _Score_ Connected[2][2][3][8];
 
 // Doubled pawn penalty
-const _Score_ Doubled = S(18, 38);
+static const _Score_ Doubled = S(18, 38);
 
 // Weakness of our pawn shelter in front of the king by [isKingFile][distance from edge][rank].
 // RANK_1 = 0 is used for files where we have no pawns or our pawn is behind our king.
-const V ShelterWeakness[][4][8] = 
+static const V ShelterWeakness[2][4][8] = 
 {
 	{ 
 		{ V( 97), V(17), V( 9), V(44), V( 84), V( 87), V( 99) },		// Not On King file
@@ -64,8 +66,8 @@ const V StormDanger[][4][8] =
 	}
 };
 
-void pawn_init() {
-
+void pawn_init() 
+{
 	static const int Seed[8] = { 0, 13, 24, 18, 76, 100, 175, 330 };
 
 	for (int opposed = 0; opposed <= 1; ++opposed)
@@ -81,45 +83,45 @@ void pawn_init() {
 }
 
 template<bool Us>
-_Score_ ChessBoard::pawn_evaluate() {
-
+_Score_ ChessBoard::pawn_evaluate() 
+{
 	const bool     Them = (Us == WHITE_SIDE ? BLACK_SIDE : WHITE_SIDE);
-	const Direction Up = (Us == WHITE_SIDE ? NORTH : SOUTH);
-	const Direction Right = (Us == WHITE_SIDE ? NORTH_EAST : SOUTH_WEST);
-	const Direction Left = (Us == WHITE_SIDE ? NORTH_WEST : SOUTH_EAST);
 
-	BitBoard b, neighbours, stoppers, doubled, supported, phalanx;
+	BitBoard b, neighbours, stoppers, supported;
 	BitBoard lever, leverPush;
-	bool opposed, backward;
-	_Value_ score = 0;
+	bool opposed, phalanx, doubled;
+	//bool backward;								这里backward和求一个棋子后面这个格子的函数名字冲突了
+	_Score_ score = 0;
 
 	BitBoard ourPawns = BB[Us][chess_P];
 	BitBoard theirPawns = BB[Them][chess_P];
 	BitBoard tempPawn = ourPawns;
-	BitBoard choosenPawn;
+	_Pos_ choosenPawn;
+
 	// Loop through all pawns of the current color and score each pawn
 	while (tempPawn)
 	{
 		choosenPawn = pop_lsb(tempPawn);
-		BitBoard s = (unsigned long long)1 << choosenPawn;
-		//看不懂……
-		assert(s & ourPawns);//选出来的是P
-		//(0x0101010101010101 >> (rank_of(pos) << 3)) << (rank_of(pos) << 3);
 
-		opposed = theirPawns & (Us == WHITE_SIDE ? ((0x0101010101010101 >> (rank_of(s) << 3)) << (rank_of(s) << 3)) << file_of(s) :
-			((0x0101010101010101 << (rank_of(s) << 3)) >> (rank_of(s) << 3)) << file_of(s));
-		//opposed = theirPawns & forward_file_bb(Us, s);
-		doubled = ourPawns   & (Us == WHITE_SIDE ? s << 8 : s >> 8);//后面一行
-		neighbours = get_rank(ourPawns & 0xFEFEFEFEFEFEFEFEULL, s << 1) || get_rank(ourPawns & 0x7F7F7F7F7F7F7F7FULL, s >> 1);
-		//neighbours = ourPawns   & adjacent_files_bb(f);//左右列
-		phalanx = get_file(neighbours, s & 7);
-		//phalanx = neighbours & rank_bb(s);//本行
-		supported = get_file(neighbours, (Us != WHITE_SIDE ? s << 8 : s >> 8) & 7);
-		//supported = neighbours & rank_bb(s - Up);//前一行
+		//opppsed：有没有被敌兵阻挡
+		opposed = theirPawns & ((get_file(file_of(choosenPawn)) >> (relative_rank_of(Us, choosenPawn) << 3)) << (Us * (rank_of(choosenPawn) << 3)));
 
+		//doubled：叠兵
+		doubled = ourPawns & backward(mask(choosenPawn), Us);
 
-		if (supported | phalanx)
-			score += Connected[opposed][bool(phalanx)][BitCount(~supported)][(rank_of(s) ^ (Us * 7)) & 7];
+		//neighbours：左右列自己的兵
+		neighbours = ourPawns & (
+			get_file(ourPawns & 0xFEFEFEFEFEFEFEFEULL, file_of(choosenPawn + 1)) |
+			get_file(ourPawns & 0x7F7F7F7F7F7F7F7FULL, file_of(choosenPawn - 1)) );
+		
+		//phalanx：本行中自己相邻的兵
+		phalanx = get_rank(neighbours, rank_of(choosenPawn));
+		
+		//supported：前一行中被当前的兵所支援的兵
+		supported = get_rank(neighbours, rank_of(choosenPawn) + (Us == WHITE_SIDE ? -1 : 1));
+
+		if (supported || phalanx)
+			score += Connected[opposed][phalanx][BitCount(supported)][relative_rank_of(Us, choosenPawn)];
 
 		else if (!neighbours)
 			score -= Isolated;
@@ -130,12 +132,12 @@ _Score_ ChessBoard::pawn_evaluate() {
 		if (doubled && !supported)
 			score -= Doubled;
 	}
-
 	return score;
 }
 
 _Score_ ChessBoard::value_Pawn()
 {
-	int value = pawn_evaluate<WHITE_SIDE>() - pawn_evaluate<BLACK_SIDE>();
-	return make_score(value, value);
+	//int value = pawn_evaluate<WHITE_SIDE>() - pawn_evaluate<BLACK_SIDE>();
+	//return make_score(value, value);
+	return pawn_evaluate<WHITE_SIDE>() - pawn_evaluate<BLACK_SIDE>();
 }

@@ -6,6 +6,7 @@
 #define S(mg, eg) make_score(mg, eg)
 
 //============================∆Â≈Ãµƒ∂®“Â===================================
+/*
 enum Direction : int {
 	NORTH = 8,
 	EAST = 1,
@@ -16,7 +17,7 @@ enum Direction : int {
 	SOUTH_EAST = SOUTH + EAST,
 	SOUTH_WEST = SOUTH + WEST,
 	NORTH_WEST = NORTH + WEST
-};
+};*/
 
 const BitBoard FileABB = 0x0101010101010101ULL;
 const BitBoard FileBBB = FileABB << 1;

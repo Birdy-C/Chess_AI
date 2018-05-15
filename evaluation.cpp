@@ -1,4 +1,5 @@
 #include "Evaluation.h"
+#include "BitBoard.h"
 
 extern const _Score_ Piece_Value[_PATTERN_COUNT_];
 extern _Score_ psq[PIECE_NUM][SQ_COUNT];
@@ -52,10 +53,11 @@ const _Score_ TrappedBishopA1H1 = S(50, 50);
 // Outpost[knight/bishop][supported by pawn] contains bonuses for minor
 // pieces if they can reach an outpost square, bigger if that square is
 // supported by a pawn. If the minor piece occupies an outpost square
-// then score is doubled.
-const _Score_ Outpost[][2] = {
-	{ S(22, 6), S(36,12) }, // Knight
-	{ S(9, 2), S(15, 5) }  // Bishop
+// then score is doubled.															//前哨
+const _Score_ Outpost[][2] = 
+{
+	{ S(22, 6), S(36,12) },		// Knight
+	{ S( 9, 2), S(15, 5) }		// Bishop
 };
 
 // RookOnFile[semiopen/open] contains bonuses for each rook when there is no
@@ -65,11 +67,12 @@ const _Score_ RookOnFile[] = { S(20, 7), S(45, 20) };
 // ThreatByMinor/ByRook[attacked PieceType] contains bonuses according to
 // which piece type attacks which one. Attacks on lesser pieces which are
 // pawn-defended are not considered.
-const _Score_ ThreatByMinor[8] = {
+const _Score_ ThreatByMinor[8] = 
+{
 	S(0, 0), S(0, 33), S(45, 43), S(46, 47), S(72, 107), S(48, 118)
 };
-
-const _Score_ ThreatByRook[8] = {
+const _Score_ ThreatByRook[8] = 
+{
 	S(0, 0), S(0, 25), S(40, 62), S(40, 59), S(0, 34), S(35, 48)
 };
 
@@ -84,14 +87,13 @@ const _Score_ ThreatByKing[] = { S(3, 62), S(9, 138) };
 //	{ V(0), V(7), V(14), V(38), V(73), V(166), V(252) }
 //};
 
-// PassedFile[File] contains a bonus according to the file of a passed pawn
-const _Score_ PassedFile[8] = {
+// PassedFile[File] contains a bonus according to the file of a passed pawn				//通路兵
+const _Score_ PassedFile[8] = 
+{
 	S(9, 10), S(2, 10), S(1, -8), S(-20,-12),
 	S(-20,-12), S(1, -8), S(2, 10), S(9, 10)
 };
 
-// Data members
-//const BitBoard& pos;
 
 BitBoard mobilityArea[_SIDE_COUNT_];
 _Value_ mobility[_SIDE_COUNT_] = { 0, 0 };
@@ -112,9 +114,7 @@ BitBoard attackedBy2[_SIDE_COUNT_];
 // kingRing[color] is the zone around the king which is considered
 // by the king safety evaluation. This consists of the squares directly
 // adjacent to the king, and (only for a king on its first rank) the
-// squares two ranks in front of the king. For instance, if black's king
-// is on g8, kingRing[BLACK] is a bitboard containing the squares f8, h8,
-// f7, g7, h7, f6, g6 and h6.
+// squares two ranks in front of the king. 
 BitBoard kingRing[_SIDE_COUNT_];
 
 // kingAttackersCount[color] is the number of pieces of the given color
@@ -138,9 +138,8 @@ int kingAdjacentZoneAttacksCount[_SIDE_COUNT_];
 
 _Score_ make_score(int mg, int eg)
 {
-	return (_Score_)(((uint32_t)eg << 16) | (uint32_t)mg);
+	return (_Score_)(((uint32_t)eg << 16) | (uint16_t)mg);
 }
-
 
 void ChessBoard::init_Eval()
 {
@@ -148,22 +147,17 @@ void ChessBoard::init_Eval()
 	pawn_init();
 }
 
-int relative_rank(bool c, _Pos_ s) 
-{
-	return (s >> 3) ^ ((int)c * 7);
-}
 
 //====================================具体估值====================================//
 
 //总的评估
-_Value_ ChessBoard::evaluation(const bool &side)
+_Value_ ChessBoard::evaluation(const bool &curSide, bool test_mode)
 {
 	//白方为视角 这里开七个最后一个记录总的
 
-	bool test_mode = false;
-
 	_Score_ result = 0;
 	_Score_ score = 0;
+
 	init_attackArea();
 	init_phase(gamePhase, non_pawn_material);
 
@@ -174,7 +168,7 @@ _Value_ ChessBoard::evaluation(const bool &side)
 		std::cout <<" _Material \t "<< (int16_t)(result & 0xffff) << '\t' << (int16_t)(result >> 16) << std::endl;
 
 
-	// Imbalance 主要是棋子数量的影响 残局的判断还没加
+	// Imbalance 主要是棋子数量相互之间的影响 残局的判断还没加
 	result = value_Imbalance();
 	score += result;
 	if (test_mode)
@@ -187,12 +181,12 @@ _Value_ ChessBoard::evaluation(const bool &side)
 		std::cout << " value_Pawn \t " << (int16_t)(result & 0xffff) << '\t' << (int16_t)(result >> 16) << std::endl;
 
 
+	
 	// Early exit if score is high
 	int score1;
 	score1 = (((int16_t)(score & 0xffff)) + ((int16_t)(score >> 16))) / 2;
 	if (abs(score1)+ Contempt > LazyThreshold)
-		return side ? score1 : -score1;
-
+		return curSide ? -score1 : score1;
 
 
 	result = evaluate_pieces();
@@ -207,7 +201,7 @@ _Value_ ChessBoard::evaluation(const bool &side)
 
 
 	// Space 这个主要是在开局的时候加快出子
-	if (non_pawn_material[WHITE_SIDE] + non_pawn_material[BLACK_SIDE] >= SpaceThreshold)
+	if (((non_pawn_material[WHITE_SIDE] + non_pawn_material[BLACK_SIDE]) & 0xffff) >= SpaceThreshold)
 	{
 		result = value_Space(attackAreaWhite, attackAreaBlack);
 		score += result;
@@ -223,17 +217,17 @@ _Value_ ChessBoard::evaluation(const bool &side)
 
 	if (test_mode)
 		std::cout << " ALL    \t " << (int16_t)(score & 0xffff) << '\t' << (int16_t)(score >> 16) << std::endl;
-
+	
 
 	// Interpolate between a middlegame and a (scaled by 'sf') endgame score
 	int sf = 64;//这个可以根据mgvalue和egvalue求出来 然而我看不懂……直接带了normal 在evaluate主函数结尾
-	int v = ((int16_t)(score >> 16)) * int(gamePhase)
-		+ ((int16_t)(score & 0xffff)) * int(PHASE_MIDGAME - gamePhase) * sf / 64;
+	int v = ((int16_t)(score & 0xFFFF)) * int(gamePhase)
+		+ ((int16_t)(score >> 16)) * int(PHASE_MIDGAME - gamePhase) * sf / 64;
 
 	v /= int(PHASE_MIDGAME);
 
 	//std::cout << score1 << std::endl;
-	return side ? v : -v;
+	return curSide ? -v : v;
 }
 
 
@@ -325,6 +319,7 @@ int ChessBoard::init_phase(Phase& gamePhase, _Score_* non_pawn_material)
 	npm = EndgameLimit > npm ? EndgameLimit : npm;
 	// Map total non-pawn material into [PHASE_ENDGAME, PHASE_MIDGAME]
 	gamePhase = Phase(((npm - EndgameLimit) * PHASE_MIDGAME) / (MidgameLimit - EndgameLimit));
+
 	return 0;
 }
 
@@ -408,18 +403,17 @@ _Score_ ChessBoard::value_Space(BitBoard *attackAreaWhite, BitBoard *attackAreaB
 // evaluate_pieces() assigns bonuses and penalties to the pieces of a given
 // color and type.
 // 单个棋子的评价，包括对mobility，attack和king theat（虽然没加……）的更新
-_Score_ ChessBoard::evaluate_pieces() {
-
+_Score_ ChessBoard::evaluate_pieces() 
+{
 	BitBoard b, bb;
 	_Score_ score = 0;
 	BitBoard OutpostRanks;
+
 	for (_ChessPattern_ pt = chess_N; pt <= chess_Q; ++pt)
 	{
 		attackAreaWhite[pt] = 0ULL;
-		//const Bitboard OutpostRanks = (Us == WHITE ? Rank4BB | Rank5BB | Rank6BB
-		//	: Rank5BB | Rank4BB | Rank3BB);
-
 		OutpostRanks = Rank5BB | Rank4BB | Rank3BB;
+
 		for (size_t pt_id = 0; pt_id < chess_count(WHITE_SIDE, pt); pt_id++)
 		{
 			//attackAreaWhite[pt] |= AttackRange[List[pt][pt_id]];
@@ -475,11 +469,6 @@ _Score_ ChessBoard::evaluate_pieces() {
 					if (BitCount(Center & b) > 1)
 						score += LongRangedBishop;
 				}
-
-				// An important Chess960 pattern: A cornered bishop blocked by a friendly
-				// pawn diagonally in front of it is a very serious problem, especially
-				// when that pawn is also blocked.
-				// 省掉了这一部分
 			}
 
 			if (pt == chess_R)
@@ -632,7 +621,7 @@ _Score_ ChessBoard::evaluate_threats(bool Us) {
 		if(Us== WHITE_SIDE)
 			safeThreats = (b & 0x7F7F7F7F7F7F7F7FULL) >> 7 | (b & 0xFEFEFEFEFEFEFEFEULL) >> 9;
 		else
-			safeThreats = (b & 0x7F7F7F7F7F7F7F7FULL) << 7 | (b & 0xFEFEFEFEFEFEFEFEULL) << 9;
+			safeThreats = (b & 0x7F7F7F7F7F7F7F7FULL) << 9 | (b & 0xFEFEFEFEFEFEFEFEULL) << 7;
 
 		safeThreats &= weak;
 		score += ThreatBySafePawn * BitCount(safeThreats);
@@ -659,18 +648,18 @@ _Score_ ChessBoard::evaluate_threats(bool Us) {
 		while (b)
 		{
 			_Pos_ s = pop_lsb(b);
-			score += ThreatByMinor[chess_at(s) + 1];
-			if (chess_at(s) != chess_P)
-				score += ThreatByRank * (int)relative_rank(Them, s);
+			score += ThreatByMinor[(7 & (chess_at(s)) + 1)];
+			if ((7 & chess_at(s)) != chess_P)
+				score += ThreatByRank * (int)relative_rank_of(Them, s);
 		}
 
 		b = (BB[Them][chess_Q]| weak) & attackedBy[Us][chess_R];
 		while (b)
 		{
 			_Pos_ s = pop_lsb(b);
-			score += ThreatByRook[chess_at(s) + 1];
-			if (chess_at(s) != chess_P)
-				score += ThreatByRank * (int)relative_rank(Them, s);
+			score += ThreatByRook[(7 & chess_at(s)) + 1];
+			if ((7 & chess_at(s)) != chess_P)
+				score += ThreatByRank * (int)relative_rank_of(Them, s);
 		}
 
 		score += Hanging * BitCount(weak & ~attackedBy[Them][chess_All]);
@@ -712,7 +701,7 @@ _Score_ ChessBoard::evaluate_threats(bool Us) {
 	}
 	else
 	{
-		b = (b & 0x7F7F7F7F7F7F7F7FULL) << 7 | (b & 0xFEFEFEFEFEFEFEFEULL) << 9;
+		b = (b & 0x7F7F7F7F7F7F7F7FULL) << 9 | (b & 0xFEFEFEFEFEFEFEFEULL) << 7;
 	}
 
 	b = b

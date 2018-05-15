@@ -47,9 +47,9 @@ void MyApp::MoveChess(const _Coordinate_ &orig_x, const _Coordinate_ &orig_y, co
 		side = !side;
 	step_count++;
 
-	system("cls");
+	//system("cls");
 	CheckControl(NONE != Board.move_capture());
-	Board.DEBUG_PRINT_EXPAND(side);
+	//Board.DEBUG_PRINT_EXPAND(side);
 }
 
 //函数简介：主要用于AI搜索时进行一步落子，函数将识别各种flag、王车易位、过路兵、升变等操作并作出响应，函数将默认落子是合法的，若传入不合法的Movement将会造成错误

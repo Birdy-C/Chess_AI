@@ -127,18 +127,8 @@ ExtMove* make_promotion(ExtMove *cur, const _Pos_ &p, int delta_pos)
 void MoveGenerator::score_cap()
 {
 	extern const _Score_ Piece_Value[_PATTERN_COUNT_];
-	//由于Piece_Value是mg与eg的叠加故此函数需要再考虑---------------------DEBUG---------------------------
 
 	for (ExtMove* m = cur; m < end; m++)
-	{
-		if (MOVE_ENPASS == m->move.Get_move_type())
-			m->scr = (_Score_)0;
-		else
-			m->scr = (_Score_)(
-				Piece_Value[Board.chess_at(m->move.Get_dest_pos()) & CHESS_PATTERN] & 0x7FFF
-				- (Piece_Value[Board.chess_at(m->move.Get_orig_pos()) & CHESS_PATTERN] >> 2) & 0x7FFF
-				- ((Piece_Value[chess_P] * (relative_rank_of(!side, m->move.Get_dest_pos()) - 1)) >> 2) & 0x7FFF
-			);
-	}
-	//----------------------------------------DEBUG------------------------------------------------------
+		m->scr = (Piece_Value[Board.chess_at(m->move.Get_dest_pos())] & 0xFFFF) - 
+			200 * relative_rank_of(Board.side_toMove(), m->move.Get_dest_pos());
 }

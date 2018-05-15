@@ -33,7 +33,7 @@ void MyApp::RunApp()
 
 	//quit = true;
 
-	//Load_Record("./Media/record.txt");			//从文件中读取棋步记录到Move_record供调试，主程序中按P可根据记录下棋
+	Load_Record("./Media/record.txt");			//从文件中读取棋步记录到Move_record供调试，主程序中按P可根据记录下棋
 
 	while (!quit)
 	{
@@ -67,31 +67,20 @@ void MyApp::startgame(SDL_Event* pevent)
 	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_n)
 		InitMatch();
 	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_e)
-		Board.evaluation(theApp.side);
-	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_z)
-		for (int ri = 0; ri < 100; ri++)
-			MoveChess(Move_record[step_count]);
+		Board.evaluation(theApp.side, true);
+	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_s)
+		FILE_Print(Move_record);
 	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_p)
+	{	
+		ChessBoard temp = Board;
+		MoveChess(temp.IterativeDeepening(side, step_count));
+	}
+	else if (pevent->type == SDL_KEYDOWN && pevent->key.keysym.sym == SDLK_m)
 	{
-		
-		if (side == WHITE_SIDE)
-		{
-			ChessBoard temp = Board;
-			MoveChess(temp.IterativeDeepening(side, step_count));
-		}
-		else
-		{
-			unsigned short branch_count;
-			Movement new_Move[MAX_BRANCH_COUNT];
-			branch_count = Board.strict_expand(side, new_Move);
-			size_t choice = rand32() % branch_count;
-			MoveChess(new_Move[choice]);
-		}
-		/*
 		system("cls");
 		MoveChess(Move_record[step_count]);
 		Board.DEBUG_PRINT_EXPAND(side);
-		printf("STEP %d\n", step_count);*/
+		printf("STEP %d\n", step_count);
 	}
 	else if (pevent->type == SDL_MOUSEBUTTONDOWN || pevent->type == SDL_MOUSEMOTION)
 		handleMouseEvent(pevent);

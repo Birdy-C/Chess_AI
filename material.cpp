@@ -82,7 +82,7 @@ void psq_init()
 		for (_Pos_ s = 0; s < 64; ++s)
 		{
 			_Coordinate_ f = file_of(s) < file_of(~s) ? file_of(s) : file_of(~s); // 小的列 用std:min会和windows的头文件冲突……
-			psq[pc][s] = v + Bonus[pc][rank_of(s)][f];
+			psq[pc][s] = v + Bonus[pc][7 - rank_of(s)][f];
 			psq[pc | BLACK_CHESS_BIT][63 - s] = -psq[pc][s];
 			//psq[~pc][~s] = -psq[pc][s];
 			//两个不一样的定义……得看看后面怎么解释的……
@@ -102,14 +102,6 @@ _Score_ ChessBoard::value_Material()
 		if (CHESS_NONE != chess)
 			value += psq[chess][p];
 	}
-	/*
-	value += (BitCount(BB[WHITE_SIDE][chess_P]) - BitCount(BB[BLACK_SIDE][chess_P])) * Piece_Value[chess_P];
-	value += (BitCount(BB[WHITE_SIDE][chess_N]) - BitCount(BB[BLACK_SIDE][chess_N])) * Piece_Value[chess_N];
-	value += (BitCount(BB[WHITE_SIDE][chess_B]) - BitCount(BB[BLACK_SIDE][chess_B])) * Piece_Value[chess_B];
-	value += (BitCount(BB[WHITE_SIDE][chess_R]) - BitCount(BB[BLACK_SIDE][chess_R])) * Piece_Value[chess_R];
-	value += (BitCount(BB[WHITE_SIDE][chess_Q]) - BitCount(BB[BLACK_SIDE][chess_Q])) * Piece_Value[chess_Q];
-	*/
-
 
 	/*	// https://chessprogramming.wikispaces.com/Bishop+Pair
 	// 分值一半的兵
